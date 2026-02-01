@@ -2,14 +2,16 @@ import { Resend } from 'resend';
 
 // Helper to get Resend instance safely
 function getResendClient() {
-    if (!process.env.RESEND_API_KEY) return null;
-    return new Resend(process.env.RESEND_API_KEY);
+    // Fallback to dummy key to prevent build-time crash if env var is missing
+    const key = process.env.RESEND_API_KEY || 're_123';
+    return new Resend(key);
 }
 
 export async function sendRequestNotification(toEmail: string, itemName: string, requesterName: string) {
     const resend = getResendClient();
+    const apiKey = process.env.RESEND_API_KEY;
 
-    if (!resend) {
+    if (!apiKey || apiKey === 're_123') {
         console.warn('RESEND_API_KEY is missing. Falling back to console log.');
         console.log(`[MOCK EMAIL] To: ${toEmail}, Item: ${itemName}, Requester: ${requesterName}`);
         return { success: true };
@@ -47,8 +49,9 @@ export async function sendRequestNotification(toEmail: string, itemName: string,
 
 export async function sendStatusUpdateEmail(toEmail: string, itemName: string, status: string, message?: string) {
     const resend = getResendClient();
+    const apiKey = process.env.RESEND_API_KEY;
 
-    if (!resend) {
+    if (!apiKey || apiKey === 're_123') {
         console.log(`[MOCK EMAIL] To: ${toEmail}, Item: ${itemName}, Status: ${status}, Message: ${message}`);
         return { success: true };
     }
