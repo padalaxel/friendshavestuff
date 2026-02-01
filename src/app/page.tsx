@@ -50,15 +50,30 @@ export default async function Home(props: {
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Navbar */}
       <header className="bg-white border-b sticky top-0 z-10 px-4 h-16 flex items-center justify-between">
-        <div className="font-bold text-xl tracking-tight text-blue-600">FriendsHaveStuff</div>
+        <Link href="/" className="font-bold text-xl tracking-tight text-blue-600 hover:text-blue-700 transition-colors">
+          FriendsHaveStuff
+        </Link>
         <div className="flex items-center gap-4">
+          {session.email === 'paul.s.rogers@gmail.com' && (
+            <Link href="/admin">
+              <Button variant="ghost" size="sm" className="text-blue-600 font-medium hidden md:flex">
+                Manage Users
+              </Button>
+            </Link>
+          )}
+
           <div className="flex items-center gap-2">
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={session.avatarUrl} />
-              <AvatarFallback>{(session.name || session.email)[0].toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <span className="text-sm font-medium hidden sm:inline">{session.name || session.email}</span>
+            <Link href="/profile" className="flex items-center gap-2 group">
+              <Avatar className="h-8 w-8 ring-2 ring-transparent group-hover:ring-blue-100 transition-all">
+                <AvatarImage src={session.avatarUrl} />
+                <AvatarFallback>{(session.name || session.email)[0].toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <span className="text-sm font-medium hidden sm:inline group-hover:text-blue-600 transition-colors">
+                {session.name || session.email}
+              </span>
+            </Link>
           </div>
+
           <form action={logout}>
             <Button variant="ghost" size="icon" title="Logout">
               <LogOut className="h-5 w-5 text-gray-500" />

@@ -171,18 +171,46 @@ export async function updateRequestStatus(requestId: string, status: string) {
     return toRequestModel(data as DBRequest);
 }
 
+// --- Users & Admin ---
+
 export const getUsers = cache(async (): Promise<UserProfile[]> => {
     const supabase = await createClient();
     const { data: allowed } = await supabase.from('allowed_users').select('*');
     if (!allowed) return [];
 
     return allowed.map((u: any) => ({
-        id: u.email,
+        // Use the linked user_id if available, otherwise fallback to email (legacy)
+        id: u.user_id || u.email,
         email: u.email,
         name: u.name || u.email,
         avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${u.name || u.email}`
     }));
 });
+
+export async function addAllowedUser(email: string, name: string) {
+    const supabase = await createClient();
+    const { error } = await supabase.from('allowed_users').insert([{ email, name }]);
+    if (error) throw error;
+}
+
+export async function removeAllowedUser(email: string) {
+    const supabase = await createClient();
+    const { error } = await supabase.from('allowed_users').delete().eq('email', email);
+    if (error) throw error;
+}
+
+export async function updateProfileName(name: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error } = await supabase
+        .from('allowed_users')
+        .update({ name })
+        .eq('email', user.email);
+
+    if (error) throw error;
+}
 
 // Helper Mappers 
 function toItemModel(dbItem: DBItem): Item {
