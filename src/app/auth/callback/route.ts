@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr';
+import { createAdminClient } from '@/lib/supabase/server';
 
 export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url)
@@ -32,6 +33,19 @@ export async function GET(request: Request) {
         )
         const { error } = await supabase.auth.exchangeCodeForSession(code)
         if (!error) {
+            // Auto-Approve User logic
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user && user.email) {
+                const adminClient = createAdminClient();
+                if (adminClient) {
+                    await adminClient.from('allowed_users').upsert({
+                        email: user.email,
+                        user_id: user.id,
+                        name: user.user_metadata.full_name || user.email.split('@')[0]
+                    }, { onConflict: 'email' });
+                }
+            }
+
             const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
             const isLocalEnv = process.env.NODE_ENV === 'development'
             if (isLocalEnv) {

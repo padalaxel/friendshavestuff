@@ -68,8 +68,15 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
         });
 
         // Send notification
+        console.log('[RequestItem] Processing request for item:', item.name);
+        console.log('[RequestItem] Owner ID:', item.ownerId);
+
         if (owner && owner.email) {
-            await sendRequestNotification(owner.email, item.name, session.name || session.email);
+            console.log('[RequestItem] Sending email to:', owner.email);
+            const emailResult = await sendRequestNotification(owner.email, item.name, session.name || session.email);
+            console.log('[RequestItem] Email result:', emailResult);
+        } else {
+            console.error('[RequestItem] Owner not found or missing email', { owner });
         }
 
         redirect(`/items/${item.id}`);

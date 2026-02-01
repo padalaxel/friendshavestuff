@@ -20,6 +20,7 @@ export type BorrowRequest = {
     status: 'pending' | 'approved' | 'declined' | 'returned';
     startDate?: string;
     endDate?: string;
+    message?: string;
     createdAt: string;
     updatedAt: string;
 };
@@ -50,6 +51,7 @@ type DBRequest = {
     status: string;
     start_date?: string;
     end_date?: string;
+    message?: string;
     created_at: string;
     updated_at: string;
 }
@@ -158,11 +160,11 @@ export async function createBorrowRequest(req: { itemId: string; requesterId: st
     return toRequestModel(data as DBRequest);
 }
 
-export async function updateRequestStatus(requestId: string, status: string) {
+export async function updateRequestStatus(requestId: string, status: string, message?: string) {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('borrow_requests')
-        .update({ status, updated_at: new Date().toISOString() })
+        .update({ status, message, updated_at: new Date().toISOString() })
         .eq('id', requestId)
         .select()
         .single();
@@ -234,6 +236,7 @@ function toRequestModel(dbReq: DBRequest): BorrowRequest {
         status: dbReq.status as any,
         startDate: dbReq.start_date,
         endDate: dbReq.end_date,
+        message: dbReq.message,
         createdAt: dbReq.created_at,
         updatedAt: dbReq.updated_at
     };

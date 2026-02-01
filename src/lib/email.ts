@@ -1,22 +1,87 @@
-export async function sendRequestNotification(toEmail: string, itemName: string, requesterName: string) {
-    // In a real app, we would use Resend, Nodemailer, or AWS SES here.
-    // For now, we log to the console as a mock service.
-    console.log(`
-    ==================================================
-    [MOCK EMAIL SERVICE]
-    To: ${toEmail}
-    Subject: New Borrow Request for ${itemName}
-    
-    Hello!
-    
-    ${requesterName} wants to borrow your ${itemName}.
-    
-    Log in to the app to approve or decline:
-    http://localhost:3000
-    ==================================================
-    `);
+import { Resend } from 'resend';
 
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return { success: true };
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+export async function sendRequestNotification(toEmail: string, itemName: string, requesterName: string) {
+    if (!process.env.RESEND_API_KEY) {
+        console.warn('RESEND_API_KEY is missing. Falling back to console log.');
+        console.log(`[MOCK EMAIL] To: ${toEmail}, Item: ${itemName}, Requester: ${requesterName}`);
+        return { success: true };
+    }
+
+    try {
+        const { data, error } = await resend.emails.send({
+            from: 'FriendsHaveStuff <onboarding@resend.dev>', // Default for testing
+            to: [toEmail],
+            subject: `New Borrow Request: ${itemName}`,
+            html: `
+                <div>
+                    <h2>New Request!</h2>
+                    <p><strong>${requesterName}</strong> wants to borrow your <strong>${itemName}</strong>.</p>
+                    <p>
+                        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/profile" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                            View Request
+                        </a>
+                    </p>
+                </div>
+            `
+        });
+
+        if (error) {
+            console.error('Error sending email:', error);
+            return { success: false, error };
+        }
+
+        return { success: true, data };
+    } catch (err) {
+        console.error('Exception sending email:', err);
+        return { success: false, error: err };
+    }
+}
+
+export async function sendStatusUpdateEmail(toEmail: string, itemName: string, status: string, message?: string) {
+    if (!process.env.RESEND_API_KEY) {
+        console.log(`[MOCK EMAIL] To: ${toEmail}, Item: ${itemName}, Status: ${status}, Message: ${message}`);
+        return { success: true };
+    }
+
+    const subject = `Request ${status.charAt(0).toUpperCase() + status.slice(1)}: ${itemName}`;
+    const color = status === 'approved' ? '#16a34a' : '#dc2626'; // Green or Red
+
+    try {
+        const { data, error } = await resend.emails.send({
+            from: 'FriendsHaveStuff <onboarding@resend.dev>',
+            to: [toEmail],
+            subject: subject,
+            html: `
+                <div>
+                    <h2>Request ${status.toUpperCase()}</h2>
+                    <p>Your request to borrow <strong>${itemName}</strong> has been <strong style="color: ${color}">${status}</strong>.</p>
+                    
+                    ${message ? `
+                        <div style="background-color: #f3f4f6; padding: 15px; border-left: 4px solid ${color}; margin: 20px 0;">
+                            <strong>Message from Owner:</strong><br/>
+                            ${message}
+                        </div>
+                    ` : ''}
+
+                    <p>
+                        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/profile" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                            View Requests
+                        </a>
+                    </p>
+                </div>
+            `
+        });
+
+        if (error) {
+            console.error('Error sending email:', error);
+            return { success: false, error };
+        }
+
+        return { success: true, data };
+    } catch (err) {
+        console.error('Exception sending email:', err);
+        return { success: false, error: err };
+    }
 }

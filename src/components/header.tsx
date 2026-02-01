@@ -31,13 +31,13 @@ export async function Header() {
 
                 <div className="flex items-center gap-2">
                     {pendingCount > 0 && (
-                        <div className="relative mr-2">
-                            <Bell className="h-5 w-5 text-gray-500" />
-                            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[16px] text-center">
+                        <Link href="/requests" className="relative mr-4 p-2 hover:bg-gray-100 rounded-full transition-colors">
+                            <Bell className="h-5 w-5 text-gray-500 hover:text-blue-600" />
+                            <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[16px] text-center shadow-sm border border-white">
                                 {pendingCount}
                             </span>
-                            <span className="sr-only">{pendingCount} pending requests</span>
-                        </div>
+                            <span className="sr-only">View {pendingCount} pending requests</span>
+                        </Link>
                     )}
 
                     <Link href="/profile" className="flex items-center gap-2 group">
@@ -52,8 +52,9 @@ export async function Header() {
                 </div>
 
                 <form action={logout}>
-                    <Button variant="ghost" size="icon" title="Logout">
-                        <LogOut className="h-5 w-5 text-gray-500" />
+                    <Button variant="ghost" className="text-gray-500 hover:text-gray-900" title="Logout">
+                        <LogOut className="h-5 w-5 mr-2" />
+                        <span className="hidden sm:inline">Logout</span>
                     </Button>
                 </form>
             </div>
