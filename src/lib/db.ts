@@ -1,0 +1,212 @@
+import { createClient } from '@/lib/supabase/server';
+import { cache } from 'react';
+
+// Types mapped to Application Model (CamelCase)
+export type Item = {
+    id: string;
+    ownerId: string;
+    name: string;
+    description?: string;
+    category?: string;
+    imageUrl?: string;
+    createdAt: string;
+};
+
+export type BorrowRequest = {
+    id: string;
+    itemId: string;
+    requesterId: string;
+    ownerId: string;
+    status: 'pending' | 'approved' | 'declined' | 'returned';
+    startDate?: string;
+    endDate?: string;
+    createdAt: string;
+    updatedAt: string;
+};
+
+export type UserProfile = {
+    id: string;
+    email: string;
+    name: string;
+    avatarUrl?: string;
+}
+
+// Internal Supabase Types
+type DBItem = {
+    id: string;
+    owner_id: string;
+    name: string;
+    description?: string;
+    category?: string;
+    image_url?: string;
+    created_at: string;
+}
+
+type DBRequest = {
+    id: string;
+    item_id: string;
+    requester_id: string;
+    owner_id: string;
+    status: string;
+    start_date?: string;
+    end_date?: string;
+    created_at: string;
+    updated_at: string;
+}
+
+// --- Data Access Methods ---
+
+export const getItems = cache(async (): Promise<Item[]> => {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('items')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('Error fetching items:', error);
+        return [];
+    }
+
+    return (data as DBItem[]).map(toItemModel);
+});
+
+export const getItemById = cache(async (id: string): Promise<Item | null> => {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('items')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+    if (error) return null;
+    return toItemModel(data as DBItem);
+});
+
+export async function createItem(item: { name: string; description?: string; category?: string; sub_category?: string; imageUrl?: string; ownerId: string }) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('items')
+        .insert([{
+            name: item.name,
+            description: item.description,
+            category: item.category,
+            image_url: item.imageUrl,
+            owner_id: item.ownerId
+        }])
+        .select()
+        .single();
+
+    if (error) throw error;
+    return toItemModel(data as DBItem);
+}
+
+export async function updateItem(id: string, updates: Partial<Item>) {
+    const supabase = await createClient();
+
+    const dbUpdates: Partial<DBItem> = {};
+    if (updates.name) dbUpdates.name = updates.name;
+    if (updates.description) dbUpdates.description = updates.description;
+    if (updates.category) dbUpdates.category = updates.category;
+    if (updates.imageUrl) dbUpdates.image_url = updates.imageUrl;
+
+    const { data, error } = await supabase
+        .from('items')
+        .update(dbUpdates)
+        .eq('id', id)
+        .select()
+        .single();
+
+    if (error) throw error;
+    return toItemModel(data as DBItem);
+}
+
+export async function deleteItem(id: string) {
+    const supabase = await createClient();
+    const { error } = await supabase.from('items').delete().eq('id', id);
+    if (error) throw error;
+}
+
+export const getRequestsForUser = cache(async (userId: string): Promise<BorrowRequest[]> => {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('borrow_requests')
+        .select('*')
+        .or(`requester_id.eq.${userId},owner_id.eq.${userId}`)
+        .order('created_at', { ascending: false });
+
+    if (error) return [];
+    return (data as DBRequest[]).map(toRequestModel);
+});
+
+export async function createBorrowRequest(req: { itemId: string; requesterId: string; ownerId: string; startDate: string; endDate: string }) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('borrow_requests')
+        .insert([{
+            item_id: req.itemId,
+            requester_id: req.requesterId,
+            owner_id: req.ownerId,
+            start_date: req.startDate,
+            end_date: req.endDate,
+            status: 'pending'
+        }])
+        .select()
+        .single();
+
+    if (error) throw error;
+    return toRequestModel(data as DBRequest);
+}
+
+export async function updateRequestStatus(requestId: string, status: string) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('borrow_requests')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', requestId)
+        .select()
+        .single();
+
+    if (error) throw error;
+    return toRequestModel(data as DBRequest);
+}
+
+export const getUsers = cache(async (): Promise<UserProfile[]> => {
+    const supabase = await createClient();
+    const { data: allowed } = await supabase.from('allowed_users').select('*');
+    if (!allowed) return [];
+
+    return allowed.map((u: any) => ({
+        id: u.email,
+        email: u.email,
+        name: u.name || u.email,
+        avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${u.name || u.email}`
+    }));
+});
+
+// Helper Mappers 
+function toItemModel(dbItem: DBItem): Item {
+    return {
+        id: dbItem.id,
+        ownerId: dbItem.owner_id,
+        name: dbItem.name,
+        description: dbItem.description,
+        category: dbItem.category,
+        imageUrl: dbItem.image_url,
+        createdAt: dbItem.created_at
+    };
+}
+
+function toRequestModel(dbReq: DBRequest): BorrowRequest {
+    return {
+        id: dbReq.id,
+        itemId: dbReq.item_id,
+        requesterId: dbReq.requester_id,
+        ownerId: dbReq.owner_id,
+        status: dbReq.status as any,
+        startDate: dbReq.start_date,
+        endDate: dbReq.end_date,
+        createdAt: dbReq.created_at,
+        updatedAt: dbReq.updated_at
+    };
+}

@@ -1,0 +1,146 @@
+{
+  "users": [
+    {
+      "id": "u1",
+      "email": "alice@example.com",
+      "name": "Alice Owner",
+      "avatarUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=Alice"
+    },
+    {
+      "id": "u2",
+      "email": "bob@example.com",
+      "name": "Bob Borrower",
+      "avatarUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=Bob"
+    }
+  ],
+  "items": [
+    {
+      "id": "i1",
+      "ownerId": "u1",
+      "name": "4-Person Tent",
+      "description": "Spacious dome tent, easy setup.",
+      "category": "Outdoors",
+      "imageUrl": "https://images.unsplash.com/photo-1504280390367-361c6d9f38f4?auto=format&fit=crop&w=800&q=80",
+      "createdAt": "2023-01-01T10:00:00Z"
+    },
+    {
+      "id": "i2",
+      "ownerId": "u1",
+      "name": "Coleman Stove",
+      "description": "Classic 2-burner propane stove.",
+      "category": "Outdoors",
+      "imageUrl": "https://i.ebayimg.com/images/g/V0YAAOSwqS5gqrrb/s-l400.jpg",
+      "createdAt": "2023-01-02T10:00:00Z"
+    },
+    {
+      "id": "i3",
+      "ownerId": "u2",
+      "name": "Cordless Drill",
+      "description": "20V Max drill with bits.",
+      "category": "Tools",
+      "imageUrl": "https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=800&q=80",
+      "createdAt": "2023-01-03T10:00:00Z"
+    },
+    {
+      "id": "i4",
+      "ownerId": "u1",
+      "name": "Stand Mixer",
+      "description": "KitchenAid artisan mixer, red.",
+      "category": "Kitchen",
+      "imageUrl": "https://images.unsplash.com/photo-1594385208974-2e75f8d7bb48?auto=format&fit=crop&w=800&q=80",
+      "createdAt": "2023-01-04T10:00:00Z"
+    },
+    {
+      "id": "i5",
+      "ownerId": "u2",
+      "name": "Pressure Washer",
+      "description": "Electric pressure washer, 2000 PSI.",
+      "category": "Garden/Yard",
+      "imageUrl": "https://hips.hearstapps.com/vader-prod.s3.amazonaws.com/1749058967-craftsman-cmepw1900-68408589d1938.jpg?crop=1xw:1xh;center,top&resize=980:*",
+      "createdAt": "2023-01-05T10:00:00Z"
+    },
+    {
+      "id": "i6",
+      "ownerId": "u1",
+      "name": "Projector",
+      "description": "1080p portable projector.",
+      "category": "Electronics",
+      "imageUrl": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=800&q=80",
+      "createdAt": "2023-01-06T10:00:00Z"
+    },
+    {
+      "id": "i7",
+      "ownerId": "u2",
+      "name": "Board Games Set",
+      "description": "Catan, Ticket to Ride, and more.",
+      "category": "Recreation",
+      "imageUrl": "https://i.ebayimg.com/images/g/d-kAAOSwewNmZJd7/s-l400.jpg",
+      "createdAt": "2023-01-07T10:00:00Z"
+    },
+    {
+      "id": "i8",
+      "ownerId": "u1",
+      "name": "Circular Saw",
+      "description": "7-1/4 inch circular saw.",
+      "category": "Tools",
+      "imageUrl": "https://i.ebayimg.com/images/g/V6QAAOSwZgBm3N8G/s-l400.jpg",
+      "createdAt": "2023-01-08T10:00:00Z"
+    },
+    {
+      "id": "i9",
+      "ownerId": "u1",
+      "name": "Carry-on Suitcase",
+      "description": "Hard-shell spinner suitcase.",
+      "category": "Travel",
+      "imageUrl": "https://i.ebayimg.com/images/g/BpQAAOSwno1l1SnE/s-l400.jpg",
+      "createdAt": "2023-01-09T10:00:00Z"
+    },
+    {
+      "id": "i10",
+      "ownerId": "u2",
+      "name": "Winter Jacket",
+      "description": "Men's L down jacket, very warm.",
+      "category": "Clothing",
+      "imageUrl": "https://images.unsplash.com/photo-1539533113208-f6df8cc8b543?auto=format&fit=crop&w=800&q=80",
+      "createdAt": "2023-01-10T10:00:00Z"
+    },
+    {
+      "id": "i11",
+      "ownerId": "u1",
+      "name": "Vacuum Cleaner",
+      "description": "Dyson cordless vacuum.",
+      "category": "Household",
+      "imageUrl": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGSlmqv8AY_dfKWcNnzpKX3Sts_KbnO-q1Xw&s",
+      "createdAt": "2023-01-11T10:00:00Z"
+    },
+    {
+      "ownerId": "u2",
+      "name": "Poop",
+      "description": "A piece of Paul's poop. One week maximum.",
+      "category": "Outdoors",
+      "imageUrl": "https://placehold.co/600x400?text=Item",
+      "id": "tf57ira",
+      "createdAt": "2026-02-01T19:17:59.021Z"
+    }
+  ],
+  "requests": [
+    {
+      "itemId": "i2",
+      "requesterId": "u2",
+      "ownerId": "u1",
+      "id": "1ykcedw",
+      "status": "approved",
+      "createdAt": "2026-02-01T19:00:23.561Z",
+      "updatedAt": "2026-02-01T19:10:44.289Z"
+    },
+    {
+      "itemId": "i10",
+      "requesterId": "u1",
+      "ownerId": "u2",
+      "id": "sgcfdtk",
+      "status": "declined",
+      "createdAt": "2026-02-01T19:09:31.822Z",
+      "updatedAt": "2026-02-01T19:14:05.745Z"
+    }
+  ]
+}
