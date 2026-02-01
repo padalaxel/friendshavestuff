@@ -1,5 +1,6 @@
 import { createItem } from '@/lib/db';
 import { getSession } from '@/lib/auth';
+import { uploadItemImage } from '@/lib/storage';
 import { redirect } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,14 +24,20 @@ export default async function AddItemPage() {
         const name = formData.get('name') as string;
         const description = formData.get('description') as string;
         const category = formData.get('category') as string;
-        const imageUrl = formData.get('imageUrl') as string;
+        const imageFile = formData.get('imageFile') as File;
+
+        let imageUrl = "https://placehold.co/600x400?text=Item"; // Default
+        if (imageFile && imageFile.size > 0) {
+            const uploadedUrl = await uploadItemImage(imageFile);
+            if (uploadedUrl) imageUrl = uploadedUrl;
+        }
 
         await createItem({
             ownerId: session.id,
             name,
             description,
             category,
-            imageUrl: imageUrl || "https://placehold.co/600x400?text=Item",
+            imageUrl,
         });
 
         redirect('/');
@@ -73,8 +80,8 @@ export default async function AddItemPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Image URL (Optional)</label>
-                                <Input name="imageUrl" placeholder="https://..." />
+                                <label className="text-sm font-medium">Photo</label>
+                                <Input type="file" name="imageFile" accept="image/*" />
                             </div>
 
                             <div className="pt-4">
