@@ -20,6 +20,8 @@ export const metadata: Metadata = {
   description: "Share gear with your friends and community.",
 };
 
+import { Header } from "@/components/header";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -30,6 +32,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Header />
         {children}
       </body>
     </html>

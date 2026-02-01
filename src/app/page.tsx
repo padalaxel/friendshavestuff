@@ -55,40 +55,6 @@ export default async function Home(props: {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Navbar */}
-      <header className="bg-white border-b sticky top-0 z-10 px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="font-bold text-xl tracking-tight text-blue-600 hover:text-blue-700 transition-colors">
-          FriendsHaveStuff
-        </Link>
-        <div className="flex items-center gap-4">
-          {session.email === 'paul.s.rogers@gmail.com' && (
-            <Link href="/admin">
-              <Button variant="ghost" size="sm" className="text-blue-600 font-medium hidden md:flex">
-                Manage Users
-              </Button>
-            </Link>
-          )}
-
-          <div className="flex items-center gap-2">
-            <Link href="/profile" className="flex items-center gap-2 group">
-              <Avatar className="h-8 w-8 ring-2 ring-transparent group-hover:ring-blue-100 transition-all">
-                <AvatarImage src={session.avatarUrl} />
-                <AvatarFallback>{(session.name || session.email)[0].toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <span className="text-sm font-medium hidden sm:inline group-hover:text-blue-600 transition-colors">
-                {session.name || session.email}
-              </span>
-            </Link>
-          </div>
-
-          <form action={logout}>
-            <Button variant="ghost" size="icon" title="Logout">
-              <LogOut className="h-5 w-5 text-gray-500" />
-            </Button>
-          </form>
-        </div>
-      </header>
-
       {/* Main Content */}
       <main className="max-w-7xl mx-auto p-4 md:p-8">
 
@@ -138,33 +104,34 @@ export default async function Home(props: {
 
           {filteredItems.length > 0 ? (
             isListView ? (
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {filteredItems.map((item) => {
                   const owner = users.find(u => u.id === item.ownerId);
                   return (
                     <Link key={item.id} href={`/items/${item.id}`}>
-                      <Card className="hover:shadow-md transition-all duration-200 p-3 flex items-center gap-4 group border-transparent hover:border-gray-200">
-                        <div className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden flex-shrink-0 relative">
+                      <Card className="hover:bg-gray-50 transition-colors p-3 flex items-start sm:items-center gap-4 group border border-gray-100 shadow-sm">
+                        {/* Smaller thumbnail, optional */}
+                        <div className="w-10 h-10 bg-gray-100 rounded-md overflow-hidden flex-shrink-0 hidden sm:block">
                           <img
-                            src={item.imageUrl || "https://placehold.co/600x400?text=No+Image"}
+                            src={item.imageUrl || "https://placehold.co/100x100?text=+"}
                             alt={item.name}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            className="w-full h-full object-cover"
                           />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">{item.name}</div>
-                          <div className="text-sm text-gray-500 truncate">{item.description}</div>
+                        <div className="flex-1 min-w-0 flex flex-col justify-center text-left">
+                          <div className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{item.name}</div>
+                          <div className="text-sm text-gray-500 truncate text-left">{item.description}</div>
                         </div>
-                        <div className="hidden sm:flex items-center gap-4">
-                          <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-100 shrink-0">
+                        <div className="hidden md:flex items-center gap-4 flex-shrink-0">
+                          <Badge variant="secondary" className="text-xs font-normal">
                             {item.category || 'General'}
                           </Badge>
-                          <div className="flex items-center gap-2 text-sm text-gray-500 shrink-0 w-32 justify-end">
-                            <Avatar className="h-6 w-6">
+                          <div className="flex items-center gap-2 text-sm text-gray-500 w-28 justify-end">
+                            <Avatar className="h-5 w-5">
                               <AvatarImage src={owner?.avatarUrl} />
                               <AvatarFallback>?</AvatarFallback>
                             </Avatar>
-                            <span className="truncate max-w-[80px] text-right">{owner?.name.split(' ')[0]}</span>
+                            <span className="truncate max-w-[80px]">{owner?.name.split(' ')[0]}</span>
                           </div>
                         </div>
                       </Card>

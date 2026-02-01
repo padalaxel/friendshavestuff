@@ -1,4 +1,5 @@
 import { getItemById, getUsers, createBorrowRequest, getRequestsForUser, updateRequestStatus, BorrowRequest } from '@/lib/db';
+import { sendRequestNotification } from '@/lib/email';
 import { getSession } from '@/lib/auth';
 import { redirect, notFound } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
@@ -65,6 +66,12 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
             startDate,
             endDate
         });
+
+        // Send notification
+        if (owner && owner.email) {
+            await sendRequestNotification(owner.email, item.name, session.name || session.email);
+        }
+
         redirect(`/items/${item.id}`);
     }
 
