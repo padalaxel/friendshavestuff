@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { Plus, LogOut } from 'lucide-react';
+import { Plus, LogOut, LayoutGrid, List } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import { Search } from '@/components/search';
 import { CategoryFilter } from '@/components/category-filter';
@@ -14,6 +14,7 @@ export default async function Home(props: {
   searchParams: Promise<{
     q?: string;
     category?: string;
+    view?: string;
   }>;
 }) {
   const session = await getSession();
@@ -23,7 +24,7 @@ export default async function Home(props: {
   const allItems = await getItems();
   const users = await getUsers();
 
-  // 1. Calculate Category Counts (from ALL items)
+  // 1. Calculate Category Counts
   const categoryCounts = allItems.reduce((acc, item) => {
     const cat = item.category || 'Other';
     acc[cat] = (acc[cat] || 0) + 1;
@@ -34,9 +35,11 @@ export default async function Home(props: {
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  // 2. Filter Items
+  // 2. Filter & Sort Items
   const query = searchParams?.q?.toLowerCase() || '';
   const categoryFilter = searchParams?.category;
+  const view = searchParams?.view || 'grid';
+  const isListView = view === 'list';
 
   const filteredItems = allItems.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(query) ||
@@ -45,6 +48,10 @@ export default async function Home(props: {
 
     return matchesSearch && matchesCategory;
   });
+
+  if (isListView) {
+    filteredItems.sort((a, b) => a.name.localeCompare(b.name));
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -104,54 +111,106 @@ export default async function Home(props: {
           <CategoryFilter categories={categories} />
         </div>
 
-        {/* Grid */}
+        {/* List/Grid Content */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">
-              {categoryFilter ? `${categoryFilter} Items` : 'All Gear'}
-              <span className="ml-2 text-sm font-normal text-gray-500">({filteredItems.length})</span>
-            </h2>
+            <div className="flex items-center gap-4">
+              <h2 className="text-xl font-bold text-gray-900">
+                {categoryFilter ? `${categoryFilter} Items` : 'All Gear'}
+                <span className="ml-2 text-sm font-normal text-gray-500">({filteredItems.length})</span>
+              </h2>
+              {/* View Toggle */}
+              <div className="flex items-center bg-white border rounded-lg p-0.5 shadow-sm">
+                <Link href={{ query: { ...searchParams, view: 'grid' } }}>
+                  <Button variant={!isListView ? 'secondary' : 'ghost'} size="icon" className="h-8 w-8 rounded-md">
+                    <LayoutGrid className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link href={{ query: { ...searchParams, view: 'list' } }}>
+                  <Button variant={isListView ? 'secondary' : 'ghost'} size="icon" className="h-8 w-8 rounded-md">
+                    <List className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
             {query && <span className="text-sm text-gray-500">Results for &quot;{query}&quot;</span>}
           </div>
 
           {filteredItems.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {filteredItems.map((item) => {
-                const owner = users.find(u => u.id === item.ownerId);
-                return (
-                  <Link key={item.id} href={`/items/${item.id}`} className="block group">
-                    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 h-full flex flex-col">
-                      <div className="aspect-[4/3] relative w-full bg-gray-100 overflow-hidden">
-                        <img
-                          src={item.imageUrl || "https://placehold.co/600x400?text=No+Image"}
-                          alt={item.name}
-                          className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
-                        />
-                        <Badge className="absolute top-2 right-2 bg-white/90 text-black hover:bg-white/90">
-                          {item.category || 'General'}
-                        </Badge>
-                      </div>
-                      <CardHeader className="p-4 pb-2 flex-grow">
-                        <div className="flex justify-between items-start">
-                          <CardTitle className="text-lg truncate" title={item.name}>{item.name}</CardTitle>
+            isListView ? (
+              <div className="space-y-3">
+                {filteredItems.map((item) => {
+                  const owner = users.find(u => u.id === item.ownerId);
+                  return (
+                    <Link key={item.id} href={`/items/${item.id}`}>
+                      <Card className="hover:shadow-md transition-all duration-200 p-3 flex items-center gap-4 group border-transparent hover:border-gray-200">
+                        <div className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden flex-shrink-0 relative">
+                          <img
+                            src={item.imageUrl || "https://placehold.co/600x400?text=No+Image"}
+                            alt={item.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          />
                         </div>
-                        <p className="text-sm text-gray-500 line-clamp-2">{item.description}</p>
-                      </CardHeader>
-                      <CardFooter className="p-4 pt-2 flex items-center justify-between border-t mt-2 bg-gray-50/50">
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
-                          <Avatar className="h-6 w-6 ring-2 ring-white">
-                            <AvatarImage src={owner?.avatarUrl} />
-                            <AvatarFallback>?</AvatarFallback>
-                          </Avatar>
-                          <span>{owner?.name.split(' ')[0]}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-gray-900 truncate group-hover:text-blue-600 transition-colors">{item.name}</div>
+                          <div className="text-sm text-gray-500 truncate">{item.description}</div>
                         </div>
-                        <Button variant="secondary" size="sm" className="pointer-events-none">Details</Button>
-                      </CardFooter>
-                    </Card>
-                  </Link>
-                );
-              })}
-            </div>
+                        <div className="hidden sm:flex items-center gap-4">
+                          <Badge className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-100 shrink-0">
+                            {item.category || 'General'}
+                          </Badge>
+                          <div className="flex items-center gap-2 text-sm text-gray-500 shrink-0 w-32 justify-end">
+                            <Avatar className="h-6 w-6">
+                              <AvatarImage src={owner?.avatarUrl} />
+                              <AvatarFallback>?</AvatarFallback>
+                            </Avatar>
+                            <span className="truncate max-w-[80px] text-right">{owner?.name.split(' ')[0]}</span>
+                          </div>
+                        </div>
+                      </Card>
+                    </Link>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {filteredItems.map((item) => {
+                  const owner = users.find(u => u.id === item.ownerId);
+                  return (
+                    <Link key={item.id} href={`/items/${item.id}`} className="block group">
+                      <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 h-full flex flex-col">
+                        <div className="aspect-[4/3] relative w-full bg-gray-100 overflow-hidden">
+                          <img
+                            src={item.imageUrl || "https://placehold.co/600x400?text=No+Image"}
+                            alt={item.name}
+                            className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <Badge className="absolute top-2 right-2 bg-white/90 text-black hover:bg-white/90">
+                            {item.category || 'General'}
+                          </Badge>
+                        </div>
+                        <CardHeader className="p-4 pb-2 flex-grow">
+                          <div className="flex justify-between items-start">
+                            <CardTitle className="text-lg truncate" title={item.name}>{item.name}</CardTitle>
+                          </div>
+                          <p className="text-sm text-gray-500 line-clamp-2">{item.description}</p>
+                        </CardHeader>
+                        <CardFooter className="p-4 pt-2 flex items-center justify-between border-t mt-2 bg-gray-50/50">
+                          <div className="flex items-center gap-2 text-sm text-gray-600">
+                            <Avatar className="h-6 w-6 ring-2 ring-white">
+                              <AvatarImage src={owner?.avatarUrl} />
+                              <AvatarFallback>?</AvatarFallback>
+                            </Avatar>
+                            <span>{owner?.name.split(' ')[0]}</span>
+                          </div>
+                          <Button variant="secondary" size="sm" className="pointer-events-none">Details</Button>
+                        </CardFooter>
+                      </Card>
+                    </Link>
+                  );
+                })}
+              </div>
+            )
           ) : (
             <div className="text-center py-20 bg-white rounded-xl border border-dashed">
               <p className="text-gray-500 text-lg">No items found matching your filters.</p>
