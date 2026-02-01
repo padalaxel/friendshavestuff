@@ -109,30 +109,48 @@ export default async function Home(props: {
                   const owner = users.find(u => u.id === item.ownerId);
                   return (
                     <Link key={item.id} href={`/items/${item.id}`}>
-                      <Card className="hover:bg-gray-50 transition-colors p-3 flex items-start sm:items-center gap-4 group border border-gray-100 shadow-sm">
-                        {/* Smaller thumbnail, optional */}
-                        <div className="w-10 h-10 bg-gray-100 rounded-md overflow-hidden flex-shrink-0 hidden sm:block">
+                      <Card className="hover:bg-gray-50 transition-colors p-4 flex flex-row items-start gap-4 group border border-gray-100 shadow-sm">
+                        {/* Desktop Thumbnail - Larger */}
+                        <div className="w-24 h-24 bg-gray-100 rounded-md overflow-hidden flex-shrink-0 hidden sm:block border border-gray-200">
                           <img
                             src={item.imageUrl || "https://placehold.co/100x100?text=+"}
                             alt={item.name}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                         </div>
-                        <div className="flex-1 min-w-0 flex flex-col justify-center text-left">
-                          <div className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{item.name}</div>
-                          <div className="text-sm text-gray-500 truncate text-left">{item.description}</div>
-                        </div>
-                        <div className="hidden md:flex items-center gap-4 flex-shrink-0">
-                          <Badge variant="secondary" className="text-xs font-normal">
-                            {item.category || 'General'}
-                          </Badge>
-                          <div className="flex items-center gap-2 text-sm text-gray-500 w-28 justify-end">
-                            <Avatar className="h-5 w-5">
-                              <AvatarImage src={owner?.avatarUrl} />
-                              <AvatarFallback>?</AvatarFallback>
-                            </Avatar>
-                            <span className="truncate max-w-[80px]">{owner?.name.split(' ')[0]}</span>
+
+                        {/* Text Content */}
+                        <div className="flex-1 min-w-0 flex flex-col gap-2">
+                          <div className="flex justify-between items-start">
+                            <div className="font-bold text-lg text-gray-900 group-hover:text-blue-600 transition-colors truncate pr-4">
+                              {item.name}
+                            </div>
+                            {/* Mobile Price/Badge placeholder if needed */}
                           </div>
+
+                          <div className="text-sm text-gray-600 line-clamp-2 leading-relaxed max-w-2xl">
+                            {item.description}
+                          </div>
+
+                          <div className="flex items-center gap-3 mt-1">
+                            <Badge variant="secondary" className="text-xs font-medium px-2 py-0.5">
+                              {item.category || 'General'}
+                            </Badge>
+                            <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                              <Avatar className="h-4 w-4">
+                                <AvatarImage src={owner?.avatarUrl} />
+                                <AvatarFallback>?</AvatarFallback>
+                              </Avatar>
+                              <span>{owner?.name.split(' ')[0]}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Right Arrow / Action placeholder for Desktop */}
+                        <div className="hidden md:flex flex-col items-end justify-center h-full self-center pl-4 border-l border-gray-100">
+                          <Button variant="ghost" size="sm" className="text-gray-400 group-hover:text-blue-600">
+                            View Details
+                          </Button>
                         </div>
                       </Card>
                     </Link>
