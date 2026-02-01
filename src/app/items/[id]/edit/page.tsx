@@ -5,6 +5,7 @@ import { redirect, notFound } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import ImagePicker from '@/components/image-picker';
 import Link from 'next/link';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 
@@ -96,8 +97,7 @@ export default async function EditItemPage({ params }: { params: { id: string } 
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Change Photo (Optional)</label>
-                                <Input type="file" name="imageFile" accept="image/*" />
-                                {item.imageUrl && <p className="text-xs text-gray-500 mt-1">Current: <a href={item.imageUrl} target="_blank" className="underline">View</a></p>}
+                                <ImagePicker name="imageFile" initialPreview={item.imageUrl} />
                             </div>
 
                             <div className="pt-4 flex gap-2">

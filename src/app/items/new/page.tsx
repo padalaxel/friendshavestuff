@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import ImagePicker from '@/components/image-picker';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
@@ -81,7 +82,7 @@ export default async function AddItemPage() {
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Photo</label>
-                                <Input type="file" name="imageFile" accept="image/*" />
+                                <ImagePicker name="imageFile" />
                             </div>
 
                             <div className="pt-4">
