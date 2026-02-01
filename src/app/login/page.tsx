@@ -1,6 +1,11 @@
 import { loginWithGoogle } from '@/lib/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Login',
+};
 
 export default function LoginPage() {
     return (

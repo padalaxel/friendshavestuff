@@ -7,6 +7,15 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle, XCircle, RefreshCw, Send } from 'lucide-react';
+import { Metadata } from 'next';
+
+export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+    const { id } = await params;
+    const item = await getItemById(id);
+    return {
+        title: item ? item.name : 'Item Not Found',
+    };
+}
 
 export default async function ItemDetailPage({ params }: { params: { id: string } }) {
     const { id } = await params;

@@ -7,6 +7,11 @@ import { Input } from '@/components/ui/input';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'My Profile',
+};
 
 export default async function ProfilePage() {
     const session = await getSession();

@@ -14,6 +14,10 @@ const CATEGORIES = [
     'Recreation', 'Travel', 'Clothing', 'Household', 'Other'
 ];
 
+export const metadata = {
+    title: 'Add New Item',
+};
+
 export default async function AddItemPage() {
     const session = await getSession();
     if (!session) redirect('/login');
