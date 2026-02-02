@@ -171,7 +171,7 @@ export default async function Home(props: {
                             alt={item.name}
                             className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                           />
-                          <Badge className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-white/90 text-black hover:bg-white/90 text-[10px] sm:text-xs px-1.5 py-0">
+                          <Badge className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-white/90 text-black hover:bg-white/90 text-[10px] sm:text-xs px-1.5 py-0 hidden sm:inline-flex">
                             {item.category || 'General'}
                           </Badge>
                         </div>
@@ -181,7 +181,7 @@ export default async function Home(props: {
                           </div>
                           <p className="text-xs sm:text-sm text-gray-500 line-clamp-2 mt-1">{item.description}</p>
                         </CardHeader>
-                        <CardFooter className="p-2 sm:p-4 pt-2 flex items-center justify-between border-t mt-2 bg-gray-50/50">
+                        <CardFooter className="p-2 sm:p-4 pt-2 flex items-center justify-between border-t mt-2 bg-gray-50/50 hidden sm:flex">
                           <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600">
                             <Avatar className="h-5 w-5 sm:h-6 sm:w-6 ring-2 ring-white">
                               <AvatarImage src={owner?.avatarUrl} />
@@ -189,7 +189,7 @@ export default async function Home(props: {
                             </Avatar>
                             <span className="truncate max-w-[60px] sm:max-w-none">{owner?.name.split(' ')[0]}</span>
                           </div>
-                          <Button variant="secondary" size="sm" className="pointer-events-none h-6 text-[10px] px-2 sm:h-8 sm:text-xs hidden sm:flex">Details</Button>
+                          <Button variant="secondary" size="sm" className="pointer-events-none h-6 text-[10px] px-2 sm:h-8 sm:text-xs">Details</Button>
                         </CardFooter>
                       </Card>
                     </Link>
