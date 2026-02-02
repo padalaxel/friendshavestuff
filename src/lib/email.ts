@@ -7,29 +7,39 @@ function getResendClient() {
     return new Resend(key);
 }
 
-export async function sendRequestNotification(toEmail: string, itemName: string, requesterName: string) {
+export async function sendRequestNotification(toEmail: string, itemName: string, requesterName: string, itemId: string) {
     const resend = getResendClient();
     const apiKey = process.env.RESEND_API_KEY;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const itemUrl = `${appUrl}/items/${itemId}`;
+    const requestsUrl = `${appUrl}/requests`;
 
     if (!apiKey || apiKey === 're_123') {
         console.warn('RESEND_API_KEY is missing. Falling back to console log.');
-        console.log(`[MOCK EMAIL] To: ${toEmail}, Item: ${itemName}, Requester: ${requesterName}`);
+        console.log(`[MOCK EMAIL] To: ${toEmail}, Item: ${itemName}, Requester: ${requesterName}, URL: ${itemUrl}`);
         return { success: true };
     }
 
     try {
         const { data, error } = await resend.emails.send({
-            from: 'FriendsHaveStuff <onboarding@resend.dev>', // Default for testing
+            from: 'FriendsHaveStuff <onboarding@resend.dev>',
             to: [toEmail],
-            subject: `New Borrow Request: ${itemName}`,
+            subject: `Action Required: Request for ${itemName}`,
             html: `
                 <div>
-                    <h2>New Request!</h2>
-                    <p><strong>${requesterName}</strong> wants to borrow your <strong>${itemName}</strong>.</p>
-                    <p>
-                        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/profile" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-                            View Request
+                    <h2>New Borrow Request</h2>
+                    <p><strong>${requesterName}</strong> wants to borrow your <strong><a href="${itemUrl}">${itemName}</a></strong>.</p>
+                    
+                    <p>Please login to approve or decline this request.</p>
+
+                    <div style="margin: 24px 0;">
+                        <a href="${requestsUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                            View & Manage Request
                         </a>
+                    </div>
+
+                    <p style="color: #666; font-size: 14px;">
+                        Or view the item here: <a href="${itemUrl}">${itemUrl}</a>
                     </p>
                 </div>
             `
