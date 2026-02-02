@@ -159,7 +159,7 @@ export default async function Home(props: {
                 })}
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4">
                 {filteredItems.map((item) => {
                   const owner = users.find(u => u.id === item.ownerId);
                   return (
@@ -171,25 +171,25 @@ export default async function Home(props: {
                             alt={item.name}
                             className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                           />
-                          <Badge className="absolute top-2 right-2 bg-white/90 text-black hover:bg-white/90">
+                          <Badge className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-white/90 text-black hover:bg-white/90 text-[10px] sm:text-xs px-1.5 py-0">
                             {item.category || 'General'}
                           </Badge>
                         </div>
-                        <CardHeader className="p-4 pb-2 flex-grow">
+                        <CardHeader className="p-2 sm:p-4 pb-0 sm:pb-2 flex-grow">
                           <div className="flex justify-between items-start">
-                            <CardTitle className="text-lg truncate" title={item.name}>{item.name}</CardTitle>
+                            <CardTitle className="text-sm sm:text-lg truncate leading-tight" title={item.name}>{item.name}</CardTitle>
                           </div>
-                          <p className="text-sm text-gray-500 line-clamp-2">{item.description}</p>
+                          <p className="text-xs sm:text-sm text-gray-500 line-clamp-2 mt-1">{item.description}</p>
                         </CardHeader>
-                        <CardFooter className="p-4 pt-2 flex items-center justify-between border-t mt-2 bg-gray-50/50">
-                          <div className="flex items-center gap-2 text-sm text-gray-600">
-                            <Avatar className="h-6 w-6 ring-2 ring-white">
+                        <CardFooter className="p-2 sm:p-4 pt-2 flex items-center justify-between border-t mt-2 bg-gray-50/50">
+                          <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600">
+                            <Avatar className="h-5 w-5 sm:h-6 sm:w-6 ring-2 ring-white">
                               <AvatarImage src={owner?.avatarUrl} />
                               <AvatarFallback>?</AvatarFallback>
                             </Avatar>
-                            <span>{owner?.name.split(' ')[0]}</span>
+                            <span className="truncate max-w-[60px] sm:max-w-none">{owner?.name.split(' ')[0]}</span>
                           </div>
-                          <Button variant="secondary" size="sm" className="pointer-events-none">Details</Button>
+                          <Button variant="secondary" size="sm" className="pointer-events-none h-6 text-[10px] px-2 sm:h-8 sm:text-xs hidden sm:flex">Details</Button>
                         </CardFooter>
                       </Card>
                     </Link>
