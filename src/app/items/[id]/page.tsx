@@ -274,6 +274,17 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
                                                         <Button size="sm" variant="outline" className="w-full bg-white">Mark Returned</Button>
                                                     </form>
                                                 )}
+
+                                                {activeRequest.status === 'declined' && (
+                                                    <div className="mt-3 pt-3 border-t border-red-200">
+                                                        <p className="text-xs text-red-800 mb-2">Request was declined. You can dismiss this to try again with different dates.</p>
+                                                        <form action={updateStatus.bind(null, activeRequest.id, 'returned')}>
+                                                            <Button size="sm" variant="secondary" className="w-full bg-white border border-red-200 text-red-700 hover:bg-red-50">
+                                                                Dismiss & Try Again
+                                                            </Button>
+                                                        </form>
+                                                    </div>
+                                                )}
                                             </CardContent>
                                         </Card>
                                     ) : (
