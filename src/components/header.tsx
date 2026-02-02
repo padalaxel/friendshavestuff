@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, Bell } from 'lucide-react';
-import { getSession, logout } from '@/lib/auth';
+import { Bell } from 'lucide-react';
+import { getSession } from '@/lib/auth';
 import { getRequestsForUser } from '@/lib/db';
+import { UserMenu } from '@/components/user-menu';
 
 export async function Header() {
     const session = await getSession();
@@ -31,7 +31,7 @@ export async function Header() {
 
                 <div className="flex items-center gap-2">
                     {pendingCount > 0 && (
-                        <Link href="/requests" className="relative mr-4 p-2 hover:bg-gray-100 rounded-full transition-colors">
+                        <Link href="/requests" className="relative mr-2 p-2 hover:bg-gray-100 rounded-full transition-colors">
                             <Bell className="h-5 w-5 text-gray-500 hover:text-blue-600" />
                             <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[16px] text-center shadow-sm border border-white">
                                 {pendingCount}
@@ -40,28 +40,14 @@ export async function Header() {
                         </Link>
                     )}
 
-                    <Link href="/my-items" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors mr-2 hidden sm:block">
-                        My Items
-                    </Link>
-
-                    <Link href="/profile" className="flex items-center gap-2 group">
-                        <Avatar className="h-8 w-8 ring-2 ring-transparent group-hover:ring-blue-100 transition-all">
-                            <AvatarImage src={session.avatarUrl} />
-                            <AvatarFallback>{(session.name || session.email)[0].toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm font-medium hidden sm:inline group-hover:text-blue-600 transition-colors">
-                            {session.name || session.email}
-                        </span>
-                    </Link>
+                    <UserMenu user={{
+                        name: session.name,
+                        email: session.email,
+                        avatarUrl: session.avatarUrl
+                    }} />
                 </div>
-
-                <form action={logout}>
-                    <Button variant="ghost" className="text-gray-500 hover:text-gray-900" title="Logout">
-                        <LogOut className="h-5 w-5 mr-2" />
-                        <span className="hidden sm:inline">Logout</span>
-                    </Button>
-                </form>
             </div>
         </header>
     );
 }
+
