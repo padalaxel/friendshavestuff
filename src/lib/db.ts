@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { cache } from 'react';
 
 // Types mapped to Application Model (CamelCase)
@@ -25,11 +25,13 @@ export type BorrowRequest = {
     updatedAt: string;
 };
 
+// Update UserProfile type to include lastLogin
 export type UserProfile = {
     id: string;
     email: string;
     name: string;
     avatarUrl?: string;
+    lastLogin?: string | null;
 }
 
 // Internal Supabase Types
@@ -56,137 +58,51 @@ type DBRequest = {
     updated_at: string;
 }
 
-// --- Data Access Methods ---
-
-export const getItems = cache(async (): Promise<Item[]> => {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-        .from('items')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-    if (error) {
-        console.error('Error fetching items:', error);
-        return [];
-    }
-
-    return (data as DBItem[]).map(toItemModel);
-});
-
-export const getItemById = cache(async (id: string): Promise<Item | null> => {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-        .from('items')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-    if (error) return null;
-    return toItemModel(data as DBItem);
-});
-
-export async function createItem(item: { name: string; description?: string; category?: string; sub_category?: string; imageUrl?: string; ownerId: string }) {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-        .from('items')
-        .insert([{
-            name: item.name,
-            description: item.description,
-            category: item.category,
-            image_url: item.imageUrl,
-            owner_id: item.ownerId
-        }])
-        .select()
-        .single();
-
-    if (error) throw error;
-    return toItemModel(data as DBItem);
-}
-
-export async function updateItem(id: string, updates: Partial<Item>) {
-    const supabase = await createClient();
-
-    const dbUpdates: Partial<DBItem> = {};
-    if (updates.name) dbUpdates.name = updates.name;
-    if (updates.description) dbUpdates.description = updates.description;
-    if (updates.category) dbUpdates.category = updates.category;
-    if (updates.imageUrl) dbUpdates.image_url = updates.imageUrl;
-
-    const { data, error } = await supabase
-        .from('items')
-        .update(dbUpdates)
-        .eq('id', id)
-        .select()
-        .single();
-
-    if (error) throw error;
-    return toItemModel(data as DBItem);
-}
-
-export async function deleteItem(id: string) {
-    const supabase = await createClient();
-    const { error } = await supabase.from('items').delete().eq('id', id);
-    if (error) throw error;
-}
-
-export const getRequestsForUser = cache(async (userId: string): Promise<BorrowRequest[]> => {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-        .from('borrow_requests')
-        .select('*')
-        .or(`requester_id.eq.${userId},owner_id.eq.${userId}`)
-        .order('created_at', { ascending: false });
-
-    if (error) return [];
-    return (data as DBRequest[]).map(toRequestModel);
-});
-
-export async function createBorrowRequest(req: { itemId: string; requesterId: string; ownerId: string; startDate: string; endDate: string }) {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-        .from('borrow_requests')
-        .insert([{
-            item_id: req.itemId,
-            requester_id: req.requesterId,
-            owner_id: req.ownerId,
-            start_date: req.startDate,
-            end_date: req.endDate,
-            status: 'pending'
-        }])
-        .select()
-        .single();
-
-    if (error) throw error;
-    return toRequestModel(data as DBRequest);
-}
-
-export async function updateRequestStatus(requestId: string, status: string, message?: string) {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-        .from('borrow_requests')
-        .update({ status, message, updated_at: new Date().toISOString() })
-        .eq('id', requestId)
-        .select()
-        .single();
-
-    if (error) throw error;
-    return toRequestModel(data as DBRequest);
-}
-
-// --- Users & Admin ---
-
 export const getUsers = cache(async (): Promise<UserProfile[]> => {
+    // Legacy simple fetch, or we can just make this call the new one if we want consistent types
+    // For now, let's leave it and replicate logical upgrade in a new function specific for Admin
     const supabase = await createClient();
     const { data: allowed } = await supabase.from('allowed_users').select('*');
     if (!allowed) return [];
 
     return allowed.map((u: any) => ({
-        // Use the linked user_id if available, otherwise fallback to email (legacy)
         id: u.user_id || u.email,
         email: u.email,
         name: u.name || u.email,
         avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${u.name || u.email}`
     }));
+});
+
+export const getUsersWithLastLogin = cache(async (): Promise<UserProfile[]> => {
+    const supabase = await createClient();
+    const adminAuthClient = createAdminClient();
+
+    // 1. Get Allowed Users (Public Data)
+    const { data: allowed } = await supabase.from('allowed_users').select('*');
+    if (!allowed) return [];
+
+    // 2. Get Auth Users (Private Data - requires Service Role)
+    // List users method defaults to 50 users per page. For small app it's fine.
+    // For larger app, we'd need pagination.
+    const { data: { users: authUsers }, error: authError } = await adminAuthClient.auth.admin.listUsers({
+        perPage: 1000
+    });
+
+    if (authError) {
+        console.error('Error fetching auth users:', authError);
+    }
+
+    // 3. Merge Data
+    return allowed.map((u: any) => {
+        const authUser = authUsers?.find((au: any) => au.email === u.email);
+        return {
+            id: u.user_id || u.email,
+            email: u.email,
+            name: u.name || u.email,
+            avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${u.name || u.email}`,
+            lastLogin: authUser?.last_sign_in_at || null
+        };
+    });
 });
 
 export async function addAllowedUser(email: string, name: string) {

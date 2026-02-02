@@ -1,5 +1,5 @@
 import { getSession } from '@/lib/auth';
-import { getUsers, addAllowedUser, removeAllowedUser } from '@/lib/db';
+import { getUsersWithLastLogin, addAllowedUser, removeAllowedUser } from '@/lib/db';
 import { redirect } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,7 +31,7 @@ export default async function AdminPage() {
         );
     }
 
-    const users = await getUsers();
+    const users = await getUsersWithLastLogin();
 
     async function addUser(formData: FormData) {
         'use server';
@@ -146,6 +146,7 @@ export default async function AdminPage() {
                                 <TableRow>
                                     <TableHead>Name</TableHead>
                                     <TableHead>Email</TableHead>
+                                    <TableHead>Last Login</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -154,6 +155,15 @@ export default async function AdminPage() {
                                     <TableRow key={user.email}>
                                         <TableCell className="font-medium">{user.name}</TableCell>
                                         <TableCell>{user.email}</TableCell>
+                                        <TableCell>
+                                            {user.lastLogin ? (
+                                                <span title={new Date(user.lastLogin).toLocaleString()}>
+                                                    {new Date(user.lastLogin).toLocaleDateString()}
+                                                </span>
+                                            ) : (
+                                                <span className="text-gray-400 italic">Never</span>
+                                            )}
+                                        </TableCell>
                                         <TableCell className="text-right">
                                             {user.email !== 'paul.s.rogers@gmail.com' && (
                                                 <form action={removeUser}>
