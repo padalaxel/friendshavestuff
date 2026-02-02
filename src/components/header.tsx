@@ -18,7 +18,7 @@ export async function Header() {
     return (
         <header className="bg-white border-b sticky top-0 z-10 px-4 h-16 flex items-center justify-between">
             <Link href="/" className="font-bold text-xl tracking-tight text-blue-600 hover:text-blue-700 transition-colors">
-                FriendsHaveStuff
+                <img src="/logo.png" alt="FriendsHaveStuff" className="h-8 md:h-10 w-auto" />
             </Link>
             <div className="flex items-center gap-4">
                 {session.email === 'paul.s.rogers@gmail.com' && (
