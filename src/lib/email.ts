@@ -7,25 +7,6 @@ function getResendClient() {
     return new Resend(key);
 }
 
-// Resend Sandbox Restriction Fix:
-// You can only send to your own email until you verify a domain.
-// This helper forces all emails to go to the verified owner for testing purposes.
-function getSafeRecipient(originalTo: string): { to: string; subjectSuffix: string } {
-    const verifiedEmail = 'paul@parallax.mov'; // HARDCODED for Testing
-
-    // If we are sending to the verified email, proceed as normal
-    if (originalTo.toLowerCase() === verifiedEmail.toLowerCase()) {
-        return { to: originalTo, subjectSuffix: '' };
-    }
-
-    // Otherwise, redirect to verified email and note it
-    console.warn(`[Resend Sandbox] Redirecting email for ${originalTo} to ${verifiedEmail}`);
-    return {
-        to: verifiedEmail,
-        subjectSuffix: ` (Intended for: ${originalTo})`
-    };
-}
-
 export async function sendRequestNotification(toEmail: string, itemName: string, requesterName: string, itemId: string) {
     const resend = getResendClient();
     const apiKey = process.env.RESEND_API_KEY;
@@ -40,15 +21,12 @@ export async function sendRequestNotification(toEmail: string, itemName: string,
     }
 
     try {
-        const { to, subjectSuffix } = getSafeRecipient(toEmail);
-
         const { data, error } = await resend.emails.send({
-            from: 'FriendsHaveStuff <onboarding@resend.dev>',
-            to: [to],
-            subject: `Action Required: Request for ${itemName}${subjectSuffix}`,
+            from: 'FriendsHaveStuff <hello@friendshavestuff.com>',
+            to: [toEmail],
+            subject: `Action Required: Request for ${itemName}`,
             html: `
                 <div>
-                    ${subjectSuffix ? `<p style="background: #fff3cd; padding: 10px; color: #856404; font-size: 12px; border: 1px solid #ffeeba;">[Sandbox Mode] This email was originally meant for: ${toEmail}</p>` : ''}
                     <h2>New Borrow Request</h2>
                     <p><strong>${requesterName}</strong> wants to borrow your <strong><a href="${itemUrl}">${itemName}</a></strong>.</p>
                     
@@ -92,12 +70,10 @@ export async function sendStatusUpdateEmail(toEmail: string, itemName: string, s
     const color = status === 'approved' ? '#16a34a' : '#dc2626'; // Green or Red
 
     try {
-        const { to, subjectSuffix } = getSafeRecipient(toEmail);
-
         const { data, error } = await resend.emails.send({
-            from: 'FriendsHaveStuff <onboarding@resend.dev>',
-            to: [to],
-            subject: `${subject}${subjectSuffix}`,
+            from: 'FriendsHaveStuff <hello@friendshavestuff.com>',
+            to: [toEmail],
+            subject: subject,
             html: `
                 <div>
                     <h2>Request ${status.toUpperCase()}</h2>
@@ -141,7 +117,7 @@ export async function sendTestEmail(toEmail: string) {
 
     try {
         const { data, error } = await resend.emails.send({
-            from: 'FriendsHaveStuff <onboarding@resend.dev>',
+            from: 'FriendsHaveStuff <hello@friendshavestuff.com>',
             to: [toEmail],
             subject: 'Test Email from FriendsHaveStuff',
             html: '<p>If you are reading this, the email integration is working!</p>'
