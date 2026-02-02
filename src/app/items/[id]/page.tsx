@@ -68,16 +68,25 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
         });
 
         // Send notification
-        console.log('[RequestItem] Processing request for item:', item.name);
-        console.log('[RequestItem] Owner ID:', item.ownerId);
+        console.log('--- [RequestItem] Debug Start ---');
+        console.log('Item Owner ID:', item.ownerId);
+        console.log('Total Users Fetched:', users.length);
+        const debugOwner = users.find(u => u.id === item.ownerId);
+        console.log('Owner Found:', debugOwner ? 'YES' : 'NO');
+        if (debugOwner) {
+            console.log('Owner Details:', { id: debugOwner.id, email: debugOwner.email, name: debugOwner.name });
+        } else {
+            console.log('Users Dump (First 5):', users.slice(0, 5).map(u => ({ id: u.id, email: u.email })));
+        }
 
         if (owner && owner.email) {
             console.log('[RequestItem] Sending email to:', owner.email);
             const emailResult = await sendRequestNotification(owner.email, item.name, session.name || session.email, item.id);
             console.log('[RequestItem] Email result:', emailResult);
         } else {
-            console.error('[RequestItem] Owner not found or missing email', { owner });
+            console.error('[RequestItem] Owner not found or missing email. Notification SKIPPED.');
         }
+        console.log('--- [RequestItem] Debug End ---');
 
         redirect(`/items/${item.id}`);
     }

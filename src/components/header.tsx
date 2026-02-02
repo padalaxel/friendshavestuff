@@ -40,6 +40,10 @@ export async function Header() {
                         </Link>
                     )}
 
+                    <Link href="/my-items" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors mr-2 hidden sm:block">
+                        My Items
+                    </Link>
+
                     <Link href="/profile" className="flex items-center gap-2 group">
                         <Avatar className="h-8 w-8 ring-2 ring-transparent group-hover:ring-blue-100 transition-all">
                             <AvatarImage src={session.avatarUrl} />
