@@ -40,15 +40,26 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
 
     const isOwner = session.id === item.ownerId;
 
+    // Define these outside so they are available in render
+    let approvedReq: BorrowRequest | undefined;
+    let pendingReq: BorrowRequest | undefined;
+
     if (isOwner) {
-        // Show the most recent relevant request
-        activeRequest = ownerRequests
-            .filter(r => r.itemId === item.id && r.status !== 'returned')
+        // Prioritize: Approved (Active Loan) > Pending > Declined/Returned
+        approvedReq = ownerRequests.find(r => r.itemId === item.id && r.status === 'approved');
+        pendingReq = ownerRequests.find(r => r.itemId === item.id && r.status === 'pending');
+
+        // Use approved first, then pending, then just the most recent one
+        activeRequest = approvedReq || pendingReq || ownerRequests
+            .filter(r => r.itemId === item.id)
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0];
     } else {
         activeRequest = requests.find(r => r.itemId === item.id && r.requesterId === session.id && r.status !== 'returned');
     }
 
+    // Get all relevant requests for this item to show availability
+    const itemRequests = ownerRequests.filter(r => r.itemId === item.id);
+    const bookings = itemRequests.filter(r => r.status === 'approved');
 
     // --- Actions ---
 
@@ -56,28 +67,59 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
         'use server';
         if (!session || !item) return;
 
-        const startDate = formData.get('startDate') as string;
-        const endDate = formData.get('endDate') as string;
+        const startDateStr = formData.get('startDate') as string;
+        const endDateStr = formData.get('endDate') as string;
+
+        const start = new Date(startDateStr);
+        const end = new Date(endDateStr);
+
+        // Validation: Dates must be valid
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            // ideally return error, but for MVP just redirect
+            return redirect(`/items/${item.id}?error=Invalid Dates`);
+        }
+
+        // Validation: End after Start
+        if (end < start) {
+            return redirect(`/items/${item.id}?error=End date must be after start date`);
+        }
+
+        // Validation: Overlap Check
+        // We need to re-fetch to be safe (concurrent requests), but using passed 'bookings' (if logic moved here) or re-querying DB is best.
+        // For this server action, we'll re-fetch just the requests for this item to check.
+        const currentItemRequests = await getRequestsForUser(item.ownerId); // Owner has all requests for their items
+        const activeBookings = currentItemRequests.filter(r =>
+            r.itemId === item.id &&
+            r.status === 'approved' &&
+            r.startDate // legacy check
+        );
+
+        const hasOverlap = activeBookings.some(booking => {
+            if (!booking.startDate) return false;
+            const bookingStart = new Date(booking.startDate!);
+            const bookingEnd = new Date(booking.endDate || booking.startDate!);
+
+            // Overlap logic: (StartA <= EndB) and (EndA >= StartB)
+            return start <= bookingEnd && end >= bookingStart;
+        });
+
+        if (hasOverlap) {
+            return redirect(`/items/${item.id}?error=Dates are already booked`);
+        }
 
         await createBorrowRequest({
             itemId: item.id,
             requesterId: session.id,
             ownerId: item.ownerId,
-            startDate,
-            endDate
+            startDate: startDateStr,
+            endDate: endDateStr
         });
+
 
         // Send notification
         console.log('--- [RequestItem] Debug Start ---');
         console.log('Item Owner ID:', item.ownerId);
-        console.log('Total Users Fetched:', users.length);
-        const debugOwner = users.find(u => u.id === item.ownerId);
-        console.log('Owner Found:', debugOwner ? 'YES' : 'NO');
-        if (debugOwner) {
-            console.log('Owner Details:', { id: debugOwner.id, email: debugOwner.email, name: debugOwner.name });
-        } else {
-            console.log('Users Dump (First 5):', users.slice(0, 5).map(u => ({ id: u.id, email: u.email })));
-        }
+        // ... logging code ...
 
         if (owner && owner.email) {
             console.log('[RequestItem] Sending email to:', owner.email);
@@ -150,39 +192,58 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
                                             <Button variant="outline" size="sm">Edit Listing</Button>
                                         </Link>
                                     </div>
-                                    {activeRequest ? (
-                                        <Card>
+
+                                    {/* Active Loan Section */}
+                                    {bookings.length > 0 && (
+                                        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                                            <h4 className="text-sm font-bold text-green-800 mb-2 flex items-center">
+                                                <CheckCircle className="h-4 w-4 mr-2" />
+                                                Currently Approved Loans
+                                            </h4>
+                                            {bookings.map(booking => (
+                                                <div key={booking.id} className="flex justify-between items-center mb-2 last:mb-0 bg-white p-2 rounded border border-green-100 dark:border-green-800">
+                                                    <div className="text-sm">
+                                                        <span className="font-semibold text-gray-900">{users.find(u => u.id === booking.requesterId)?.name}</span>
+                                                        <br />
+                                                        <span className="text-xs text-gray-500">
+                                                            {booking.startDate ? `${new Date(booking.startDate).toLocaleDateString()} - ${new Date(booking.endDate || booking.startDate).toLocaleDateString()}` : 'Indefinite'}
+                                                        </span>
+                                                    </div>
+                                                    <form action={updateStatus.bind(null, booking.id, 'returned')}>
+                                                        <Button size="sm" variant="outline" className="h-8">Mark Returned</Button>
+                                                    </form>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Pending Requests */}
+                                    {pendingReq ? (
+                                        <Card className="border-blue-200 shadow-sm">
                                             <CardContent className="p-4 space-y-3">
                                                 <div className="flex justify-between items-center">
-                                                    <span className="font-medium">Request from {users.find(u => u.id === activeRequest?.requesterId)?.name}</span>
-                                                    <Badge>{activeRequest.status}</Badge>
+                                                    <span className="font-medium text-blue-900">Request from {users.find(u => u.id === pendingReq.requesterId)?.name}</span>
+                                                    <Badge variant="default" className="bg-blue-600">Action Needed</Badge>
+                                                </div>
+                                                <div className="text-xs text-blue-700 mb-2">
+                                                    Requested for: {pendingReq.startDate ? `${new Date(pendingReq.startDate).toLocaleDateString()} - ${new Date(pendingReq.endDate || pendingReq.startDate).toLocaleDateString()}` : 'Unspecified dates'}
                                                 </div>
 
-                                                {activeRequest.status === 'pending' && (
-                                                    <div className="flex gap-2">
-                                                        <form action={updateStatus.bind(null, activeRequest.id, 'approved')} className="flex-1">
-                                                            <Button className="w-full bg-green-600 hover:bg-green-700">Approve</Button>
-                                                        </form>
-                                                        <form action={updateStatus.bind(null, activeRequest.id, 'declined')} className="flex-1">
-                                                            <Button variant="destructive" className="w-full">Decline</Button>
-                                                        </form>
-                                                    </div>
-                                                )}
-
-                                                {activeRequest.status === 'approved' && (
-                                                    <form action={updateStatus.bind(null, activeRequest.id, 'returned')}>
-                                                        <Button variant="outline" className="w-full">
-                                                            <RefreshCw className="mr-2 h-4 w-4" />
-                                                            Mark Returned
-                                                        </Button>
+                                                <div className="flex gap-2">
+                                                    <form action={updateStatus.bind(null, pendingReq.id, 'approved')} className="flex-1">
+                                                        <Button className="w-full bg-blue-600 hover:bg-blue-700">Approve</Button>
                                                     </form>
-                                                )}
-
+                                                    <form action={updateStatus.bind(null, pendingReq.id, 'declined')} className="flex-1">
+                                                        <Button variant="destructive" className="w-full">Decline</Button>
+                                                    </form>
+                                                </div>
                                             </CardContent>
                                         </Card>
                                     ) : (
-                                        <p className="text-sm text-gray-500 italic">No active requests.</p>
+                                        !bookings.length && <p className="text-sm text-gray-500 italic">No pending requests.</p>
                                     )}
+
+                                    {/* History Link or Other info could go here */}
                                 </div>
                             ) : (
                                 <div className="space-y-4">
@@ -219,6 +280,18 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
                                         <Card>
                                             <CardContent className="p-4 pt-6">
                                                 <form action={requestItem} className="space-y-4">
+                                                    {bookings.length > 0 && (
+                                                        <div className="bg-red-50 border border-red-100 rounded-md p-3 text-sm text-red-800 mb-4">
+                                                            <p className="font-semibold mb-1">Unavailable Dates:</p>
+                                                            <ul className="list-disc pl-4 space-y-0.5">
+                                                                {bookings.map(b => (
+                                                                    <li key={b.id}>
+                                                                        {b.startDate ? `${new Date(b.startDate).toLocaleDateString()} - ${new Date(b.endDate || b.startDate).toLocaleDateString()}` : 'Booked (No dates)'}
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </div>
+                                                    )}
                                                     <div className="grid grid-cols-2 gap-4">
                                                         <div className="space-y-2">
                                                             <label className="text-xs font-semibold uppercase text-gray-500">From</label>

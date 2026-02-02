@@ -95,15 +95,22 @@ export default async function MyItemsPage() {
 
                                         <div className="mt-4 pt-4 border-t flex items-center justify-between">
                                             {activeRequest ? (
-                                                <div className="flex items-center gap-2 text-sm text-amber-700 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-100">
-                                                    <span className="font-medium">Borrowed by</span>
-                                                    <div className="flex items-center gap-1">
-                                                        <Avatar className="h-5 w-5">
-                                                            <AvatarImage src={borrowingUser?.avatarUrl} />
-                                                            <AvatarFallback>?</AvatarFallback>
-                                                        </Avatar>
-                                                        <span>{borrowingUser?.name}</span>
+                                                <div className="flex flex-col items-end gap-1">
+                                                    <div className="flex items-center gap-2 text-sm text-amber-700 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-100">
+                                                        <span className="font-medium">Borrowed by</span>
+                                                        <div className="flex items-center gap-1">
+                                                            <Avatar className="h-5 w-5">
+                                                                <AvatarImage src={borrowingUser?.avatarUrl} />
+                                                                <AvatarFallback>?</AvatarFallback>
+                                                            </Avatar>
+                                                            <span>{borrowingUser?.name}</span>
+                                                        </div>
                                                     </div>
+                                                    {activeRequest.startDate && (
+                                                        <span className="text-xs text-amber-600 font-medium">
+                                                            {new Date(activeRequest.startDate).toLocaleDateString()} - {new Date(activeRequest.endDate || activeRequest.startDate).toLocaleDateString()}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             ) : (
                                                 <div className="text-sm text-green-600 font-medium flex items-center gap-1.5 bg-green-50 px-3 py-1.5 rounded-full border border-green-100">
