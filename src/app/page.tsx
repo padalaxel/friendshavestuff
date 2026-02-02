@@ -171,9 +171,6 @@ export default async function Home(props: {
                             alt={item.name}
                             className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                           />
-                          <Badge className="absolute top-1 right-1 sm:top-2 sm:right-2 bg-white/90 text-black hover:bg-white/90 text-[10px] sm:text-xs px-1.5 py-0 hidden sm:inline-flex">
-                            {item.category || 'General'}
-                          </Badge>
                         </div>
                         <CardHeader className="p-2 sm:p-4 pb-0 sm:pb-2 flex-grow">
                           <div className="flex justify-between items-start">
@@ -189,7 +186,9 @@ export default async function Home(props: {
                             </Avatar>
                             <span className="truncate max-w-[60px] sm:max-w-none">{owner?.name.split(' ')[0]}</span>
                           </div>
-                          <Button variant="secondary" size="sm" className="pointer-events-none h-6 text-[10px] px-2 sm:h-8 sm:text-xs">Details</Button>
+                          <Badge variant="secondary" className="text-[10px] sm:text-xs px-2 py-0.5 font-normal bg-white border-gray-200">
+                            {item.category || 'General'}
+                          </Badge>
                         </CardFooter>
                       </Card>
                     </Link>
