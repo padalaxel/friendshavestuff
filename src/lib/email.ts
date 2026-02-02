@@ -96,3 +96,30 @@ export async function sendStatusUpdateEmail(toEmail: string, itemName: string, s
         return { success: false, error: err };
     }
 }
+
+export async function sendTestEmail(toEmail: string) {
+    const resend = getResendClient();
+    const apiKey = process.env.RESEND_API_KEY;
+
+    if (!apiKey || apiKey === 're_123') {
+        return { success: false, error: 'Missing RESEND_API_KEY env var' };
+    }
+
+    try {
+        const { data, error } = await resend.emails.send({
+            from: 'FriendsHaveStuff <onboarding@resend.dev>',
+            to: [toEmail],
+            subject: 'Test Email from FriendsHaveStuff',
+            html: '<p>If you are reading this, the email integration is working!</p>'
+        });
+
+        if (error) {
+            console.error('Error sending test email:', error);
+            return { success: false, error };
+        }
+        return { success: true, data };
+    } catch (err) {
+        console.error('Exception sending test email:', err);
+        return { success: false, error: err };
+    }
+}

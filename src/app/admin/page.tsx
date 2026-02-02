@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trash2, UserPlus, ArrowLeft } from 'lucide-react';
+import { Trash2, UserPlus, ArrowLeft, Mail, CheckCircle, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Metadata } from 'next';
+import { sendTestEmail } from '@/lib/email';
 
 export const metadata: Metadata = {
     title: 'Admin Dashboard',
@@ -54,6 +55,19 @@ export default async function AdminPage() {
         redirect('/admin');
     }
 
+    async function handleTestEmail(formData: FormData) {
+        'use server';
+        if (session?.email !== 'paul.s.rogers@gmail.com') return;
+
+        const email = formData.get('email') as string;
+        const result = await sendTestEmail(email);
+
+        console.log('[Admin] Test Email Result:', result);
+        // We could redirect with a query param to show success/failure toast, 
+        // but for now console log is enough for debugging.
+        redirect('/admin?testEmail=' + (result.success ? 'success' : 'error'));
+    }
+
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-8">
             <div className="max-w-4xl mx-auto space-y-6">
@@ -65,6 +79,36 @@ export default async function AdminPage() {
                         </Button>
                     </Link>
                 </div>
+
+                {/* Debug Email Section */}
+                <Card className="border-blue-100 bg-blue-50/50">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-blue-700">
+                            <Mail className="h-5 w-5" />
+                            Email Debugger
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="flex items-center gap-2 text-sm">
+                            <span className="font-medium">API Key Status:</span>
+                            {process.env.RESEND_API_KEY && process.env.RESEND_API_KEY.startsWith('re_') ? (
+                                <span className="flex items-center text-green-600 gap-1"><CheckCircle className="h-4 w-4" /> Detected ({process.env.RESEND_API_KEY.slice(0, 5)}...)</span>
+                            ) : (
+                                <span className="flex items-center text-red-600 gap-1"><XCircle className="h-4 w-4" /> Missing or Invalid</span>
+                            )}
+                        </div>
+
+                        <form action={handleTestEmail} className="flex flex-col md:flex-row gap-4 items-end">
+                            <div className="flex-1 space-y-2 w-full">
+                                <label className="text-sm font-medium">Send Test Email To</label>
+                                <Input name="email" type="email" placeholder="you@example.com" defaultValue={session.email} required className="bg-white" />
+                            </div>
+                            <Button type="submit" variant="secondary" className="w-full md:w-auto">
+                                Send Test Email
+                            </Button>
+                        </form>
+                    </CardContent>
+                </Card>
 
                 {/* Add User Form */}
                 <Card>
