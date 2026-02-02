@@ -10,7 +10,8 @@ function getResendClient() {
 export async function sendRequestNotification(toEmail: string, itemName: string, requesterName: string, itemId: string) {
     const resend = getResendClient();
     const apiKey = process.env.RESEND_API_KEY;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    // Hardcode fallback to production domain if env var is missing, unless in actual development
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://friendshavestuff.com');
     const itemUrl = `${appUrl}/items/${itemId}`;
     const requestsUrl = `${appUrl}/requests`;
 
