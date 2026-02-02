@@ -58,6 +58,123 @@ type DBRequest = {
     updated_at: string;
 }
 
+// --- Data Access Methods ---
+
+export const getItems = cache(async (): Promise<Item[]> => {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('items')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('Error fetching items:', error);
+        return [];
+    }
+
+    return (data as DBItem[]).map(toItemModel);
+});
+
+export const getItemById = cache(async (id: string): Promise<Item | null> => {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('items')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+    if (error) return null;
+    return toItemModel(data as DBItem);
+});
+
+export async function createItem(item: { name: string; description?: string; category?: string; sub_category?: string; imageUrl?: string; ownerId: string }) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('items')
+        .insert([{
+            name: item.name,
+            description: item.description,
+            category: item.category,
+            image_url: item.imageUrl,
+            owner_id: item.ownerId
+        }])
+        .select()
+        .single();
+
+    if (error) throw error;
+    return toItemModel(data as DBItem);
+}
+
+export async function updateItem(id: string, updates: Partial<Item>) {
+    const supabase = await createClient();
+
+    const dbUpdates: Partial<DBItem> = {};
+    if (updates.name) dbUpdates.name = updates.name;
+    if (updates.description) dbUpdates.description = updates.description;
+    if (updates.category) dbUpdates.category = updates.category;
+    if (updates.imageUrl) dbUpdates.image_url = updates.imageUrl;
+
+    const { data, error } = await supabase
+        .from('items')
+        .update(dbUpdates)
+        .eq('id', id)
+        .select()
+        .single();
+
+    if (error) throw error;
+    return toItemModel(data as DBItem);
+}
+
+export async function deleteItem(id: string) {
+    const supabase = await createClient();
+    const { error } = await supabase.from('items').delete().eq('id', id);
+    if (error) throw error;
+}
+
+export const getRequestsForUser = cache(async (userId: string): Promise<BorrowRequest[]> => {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('borrow_requests')
+        .select('*')
+        .or(`requester_id.eq.${userId},owner_id.eq.${userId}`)
+        .order('created_at', { ascending: false });
+
+    if (error) return [];
+    return (data as DBRequest[]).map(toRequestModel);
+});
+
+export async function createBorrowRequest(req: { itemId: string; requesterId: string; ownerId: string; startDate: string; endDate: string }) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('borrow_requests')
+        .insert([{
+            item_id: req.itemId,
+            requester_id: req.requesterId,
+            owner_id: req.ownerId,
+            start_date: req.startDate,
+            end_date: req.endDate,
+            status: 'pending'
+        }])
+        .select()
+        .single();
+
+    if (error) throw error;
+    return toRequestModel(data as DBRequest);
+}
+
+export async function updateRequestStatus(requestId: string, status: string, message?: string) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('borrow_requests')
+        .update({ status, message, updated_at: new Date().toISOString() })
+        .eq('id', requestId)
+        .select()
+        .single();
+
+    if (error) throw error;
+    return toRequestModel(data as DBRequest);
+}
+
 export const getUsers = cache(async (): Promise<UserProfile[]> => {
     // Legacy simple fetch, or we can just make this call the new one if we want consistent types
     // For now, let's leave it and replicate logical upgrade in a new function specific for Admin
