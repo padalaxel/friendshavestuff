@@ -150,11 +150,11 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {/* Image Col */}
                     <div className="space-y-4">
-                        <div className="aspect-[4/3] w-full rounded-xl overflow-hidden bg-gray-200 shadow-sm border">
+                        <div className="w-full rounded-xl overflow-hidden bg-gray-50 shadow-sm border min-h-[300px] flex items-center justify-center">
                             <img
                                 src={item.imageUrl || "https://placehold.co/800x600?text=No+Image"}
                                 alt={item.name}
-                                className="object-cover w-full h-full"
+                                className="object-contain w-full h-auto max-h-[70vh]"
                             />
                         </div>
                     </div>
