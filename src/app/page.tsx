@@ -1,5 +1,6 @@
 import { getItems, getUsers } from '@/lib/db';
-import { getSession, logout } from '@/lib/auth';
+import { getSession } from '@/lib/auth';
+import { logout } from '@/lib/actions';
 import { Card, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';

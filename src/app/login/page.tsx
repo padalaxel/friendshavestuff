@@ -1,4 +1,4 @@
-import { loginWithGoogle } from '@/lib/auth';
+import { loginWithGoogle } from '@/lib/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Metadata } from 'next';

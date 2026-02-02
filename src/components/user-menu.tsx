@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, User, Package, ChevronDown } from 'lucide-react';
-import { logout } from '@/lib/auth';
+import { logout } from '@/lib/actions';
 
 type UserMenuProps = {
     user: {
