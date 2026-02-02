@@ -133,7 +133,7 @@ export default async function Home(props: {
                             {item.description}
                           </div>
 
-                          <div className="flex items-center gap-3 mt-1">
+                          <div className="flex items-center gap-3 mt-1 hidden sm:flex">
                             <Badge variant="secondary" className="text-xs font-medium px-2 py-0.5">
                               {item.category || 'General'}
                             </Badge>
