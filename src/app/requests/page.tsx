@@ -38,8 +38,8 @@ export default async function RequestsPage() {
         const requester = users.find(u => u.id === updatedReq.requesterId);
         const item = await getItemById(updatedReq.itemId);
 
-        if (requester && item) {
-            await sendStatusUpdateEmail(requester.email, item.name, status, message);
+        if (requester && item && session) {
+            await sendStatusUpdateEmail(requester.email, item.name, status, message, session.email);
         }
 
         revalidatePath('/requests');
