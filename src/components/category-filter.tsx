@@ -30,6 +30,14 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
     'Other': Package
 };
 
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+
 export function CategoryFilter({ categories }: { categories: { name: string, count: number }[] }) {
     const searchParams = useSearchParams();
     const pathname = usePathname();
@@ -39,7 +47,7 @@ export function CategoryFilter({ categories }: { categories: { name: string, cou
 
     const handleCategory = (category: string | null) => {
         const params = new URLSearchParams(searchParams);
-        if (category) {
+        if (category && category !== 'all') {
             params.set('category', category);
         } else {
             params.delete('category');
@@ -48,36 +56,59 @@ export function CategoryFilter({ categories }: { categories: { name: string, cou
     };
 
     return (
-        <div className="flex flex-wrap gap-4 mb-8">
-            <Button
-                variant={!currentCategory ? "default" : "outline"}
-                onClick={() => handleCategory(null)}
-                className="h-auto py-4 px-6 flex flex-col items-center gap-2 min-w-[100px]"
-            >
-                <Package className="h-6 w-6" />
-                <span className="text-sm font-medium">All Items</span>
-            </Button>
+        <div className="mb-8">
+            {/* Mobile Dropdown */}
+            <div className="md:hidden">
+                <Select
+                    value={currentCategory || 'all'}
+                    onValueChange={(val) => handleCategory(val === 'all' ? null : val)}
+                >
+                    <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select Category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Items</SelectItem>
+                        {categories.map((cat) => (
+                            <SelectItem key={cat.name} value={cat.name}>
+                                {cat.name} ({cat.count})
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
 
-            {categories.map((cat) => {
-                const Icon = CATEGORY_ICONS[cat.name] || Package;
-                return (
-                    <Button
-                        key={cat.name}
-                        variant={currentCategory === cat.name ? "default" : "outline"}
-                        onClick={() => handleCategory(cat.name)}
-                        className={cn(
-                            "h-auto py-4 px-6 flex flex-col items-center gap-2 min-w-[100px]",
-                            currentCategory === cat.name ? "ring-2 ring-offset-2 ring-blue-500" : ""
-                        )}
-                    >
-                        <Icon className="h-6 w-6" />
-                        <div className="flex flex-col items-center">
-                            <span className="text-sm font-medium">{cat.name}</span>
-                            <span className="text-xs opacity-70">{cat.count} items</span>
-                        </div>
-                    </Button>
-                );
-            })}
+            {/* Desktop Buttons */}
+            <div className="hidden md:flex flex-wrap gap-4">
+                <Button
+                    variant={!currentCategory ? "default" : "outline"}
+                    onClick={() => handleCategory(null)}
+                    className="h-auto py-4 px-6 flex flex-col items-center gap-2 min-w-[100px]"
+                >
+                    <Package className="h-6 w-6" />
+                    <span className="text-sm font-medium">All Items</span>
+                </Button>
+
+                {categories.map((cat) => {
+                    const Icon = CATEGORY_ICONS[cat.name] || Package;
+                    return (
+                        <Button
+                            key={cat.name}
+                            variant={currentCategory === cat.name ? "default" : "outline"}
+                            onClick={() => handleCategory(cat.name)}
+                            className={cn(
+                                "h-auto py-4 px-6 flex flex-col items-center gap-2 min-w-[100px]",
+                                currentCategory === cat.name ? "ring-2 ring-offset-2 ring-blue-500" : ""
+                            )}
+                        >
+                            <Icon className="h-6 w-6" />
+                            <div className="flex flex-col items-center">
+                                <span className="text-sm font-medium">{cat.name}</span>
+                                <span className="text-xs opacity-70">{cat.count} items</span>
+                            </div>
+                        </Button>
+                    );
+                })}
+            </div>
         </div>
     );
 }
