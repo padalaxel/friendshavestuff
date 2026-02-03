@@ -110,8 +110,8 @@ export default async function Home(props: {
                   const owner = users.find(u => u.id === item.ownerId);
                   return (
                     <Link key={item.id} href={`/items/${item.id}`}>
-                      <Card className="hover:bg-gray-50 transition-colors p-4 flex flex-row items-start gap-4 group border border-gray-100 shadow-sm">
-                        {/* Desktop Thumbnail - Larger */}
+                      <Card className="hover:bg-gray-50 transition-colors p-3 sm:p-4 flex flex-row items-center sm:items-start gap-3 sm:gap-4 group border border-gray-100 shadow-sm">
+                        {/* Desktop Thumbnail - Left Side */}
                         <div className="w-24 h-24 bg-gray-100 rounded-md overflow-hidden flex-shrink-0 hidden sm:block border border-gray-200">
                           <img
                             src={item.imageUrl || "https://placehold.co/100x100?text=+"}
@@ -121,15 +121,14 @@ export default async function Home(props: {
                         </div>
 
                         {/* Text Content */}
-                        <div className="flex-1 min-w-0 flex flex-col gap-2">
+                        <div className="flex-1 min-w-0 flex flex-col gap-1 sm:gap-2">
                           <div className="flex justify-between items-start">
-                            <div className="font-bold text-lg text-gray-900 group-hover:text-blue-600 transition-colors truncate pr-4">
+                            <div className="font-bold text-base sm:text-lg text-gray-900 group-hover:text-blue-600 transition-colors truncate pr-2">
                               {item.name}
                             </div>
-                            {/* Mobile Price/Badge placeholder if needed */}
                           </div>
 
-                          <div className="text-sm text-gray-600 line-clamp-2 leading-relaxed max-w-2xl">
+                          <div className="text-sm text-gray-600 line-clamp-2 leading-relaxed max-w-2xl hidden sm:block">
                             {item.description}
                           </div>
 
@@ -147,7 +146,16 @@ export default async function Home(props: {
                           </div>
                         </div>
 
-                        {/* Right Arrow / Action placeholder for Desktop */}
+                        {/* Mobile Thumbnail - Right Side */}
+                        <div className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden flex-shrink-0 block sm:hidden border border-gray-200">
+                          <img
+                            src={item.imageUrl || "https://placehold.co/100x100?text=+"}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+
+                        {/* Desktop Actions */}
                         <div className="hidden md:flex flex-col items-end justify-center h-full self-center pl-4 border-l border-gray-100">
                           <Button variant="ghost" size="sm" className="text-gray-400 group-hover:text-blue-600">
                             View Details
