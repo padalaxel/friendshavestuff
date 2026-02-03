@@ -167,8 +167,8 @@ export default async function Home(props: {
                 })}
               </div>
             ) : (
-            ): (
-                <div className = "grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4">
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4">
                 {filteredItems.map((item) => {
                   const owner = users.find(u => u.id === item.ownerId);
                   return (
@@ -218,17 +218,17 @@ export default async function Home(props: {
                     </Link>
                   );
                 })}
-        </div>
-        )
-        ) : (
-        <div className="text-center py-20 bg-white rounded-xl border border-dashed">
-          <p className="text-gray-500 text-lg">No items found matching your filters.</p>
-          <Link href="/">
-            <Button variant="link">Clear filters</Button>
-          </Link>
-        </div>
+              </div>
+            )
+          ) : (
+            <div className="text-center py-20 bg-white rounded-xl border border-dashed">
+              <p className="text-gray-500 text-lg">No items found matching your filters.</p>
+              <Link href="/">
+                <Button variant="link">Clear filters</Button>
+              </Link>
+            </div>
           )}
-    </div>
+        </div>
       </main >
     </div >
   );
