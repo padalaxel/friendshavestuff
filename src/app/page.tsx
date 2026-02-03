@@ -110,9 +110,9 @@ export default async function Home(props: {
                   const owner = users.find(u => u.id === item.ownerId);
                   return (
                     <Link key={item.id} href={`/items/${item.id}`}>
-                      <Card className="hover:bg-gray-50 transition-colors p-3 sm:p-4 flex flex-row items-center sm:items-start gap-3 sm:gap-4 group border border-gray-100 shadow-sm">
+                      <Card className="hover:bg-gray-50 transition-colors p-3 md:p-4 flex flex-row items-center md:items-start gap-3 md:gap-4 group border border-gray-100 shadow-sm">
                         {/* Desktop Thumbnail - Left Side */}
-                        <div className="w-24 h-24 bg-gray-100 rounded-md overflow-hidden flex-shrink-0 hidden sm:block border border-gray-200">
+                        <div className="w-24 h-24 bg-gray-100 rounded-md overflow-hidden flex-shrink-0 hidden md:block border border-gray-200">
                           <img
                             src={item.imageUrl || "https://placehold.co/100x100?text=+"}
                             alt={item.name}
@@ -121,18 +121,18 @@ export default async function Home(props: {
                         </div>
 
                         {/* Text Content */}
-                        <div className="flex-1 min-w-0 flex flex-col gap-1 sm:gap-2">
+                        <div className="flex-1 min-w-0 flex flex-col gap-1 md:gap-2">
                           <div className="flex justify-between items-start">
-                            <div className="font-bold text-base sm:text-lg text-gray-900 group-hover:text-blue-600 transition-colors truncate pr-2">
+                            <div className="font-bold text-base md:text-lg text-gray-900 group-hover:text-blue-600 transition-colors truncate pr-2">
                               {item.name}
                             </div>
                           </div>
 
-                          <div className="text-sm text-gray-600 line-clamp-2 leading-relaxed max-w-2xl hidden sm:block">
+                          <div className="text-sm text-gray-600 line-clamp-2 leading-relaxed max-w-2xl hidden md:block">
                             {item.description}
                           </div>
 
-                          <div className="flex items-center gap-3 mt-1 hidden sm:flex">
+                          <div className="flex items-center gap-3 mt-1 hidden md:flex">
                             <Badge variant="secondary" className="text-xs font-medium px-2 py-0.5">
                               {item.category || 'General'}
                             </Badge>
@@ -147,7 +147,7 @@ export default async function Home(props: {
                         </div>
 
                         {/* Mobile Thumbnail - Right Side */}
-                        <div className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden flex-shrink-0 block sm:hidden border border-gray-200">
+                        <div className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden flex-shrink-0 block md:hidden border border-gray-200">
                           <img
                             src={item.imageUrl || "https://placehold.co/100x100?text=+"}
                             alt={item.name}
