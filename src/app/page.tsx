@@ -168,41 +168,26 @@ export default async function Home(props: {
               </div>
             ) : (
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4">
                 {filteredItems.map((item) => {
                   const owner = users.find(u => u.id === item.ownerId);
                   return (
                     <Link key={item.id} href={`/items/${item.id}`} className="block group">
-                      <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 h-full flex flex-row sm:flex-col items-center sm:items-stretch gap-3 sm:gap-0 p-3 sm:p-0">
-                        {/* Desktop Image - Top */}
-                        <div className="aspect-[4/3] relative w-full bg-gray-100 overflow-hidden hidden sm:block">
+                      <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 h-full flex flex-col">
+                        <div className="aspect-[4/3] relative w-full bg-gray-100 overflow-hidden">
                           <img
                             src={item.imageUrl || "https://placehold.co/600x400?text=No+Image"}
                             alt={item.name}
                             className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                           />
                         </div>
-
-                        <div className="flex-1 min-w-0 flex flex-col gap-1 sm:p-4 sm:pb-2">
-                          {/* Mobile: Name Left */}
+                        <CardHeader className="p-2 sm:p-4 pb-0 sm:pb-2 flex-grow">
                           <div className="flex justify-between items-start">
-                            <CardTitle className="text-base sm:text-lg truncate leading-tight w-full" title={item.name}>
-                              {item.name}
-                            </CardTitle>
+                            <CardTitle className="text-sm sm:text-lg truncate leading-tight" title={item.name}>{item.name}</CardTitle>
                           </div>
-                          <p className="text-xs sm:text-sm text-gray-500 line-clamp-2 mt-1 hidden sm:block">{item.description}</p>
-                        </div>
-
-                        {/* Mobile Image - Right Side */}
-                        <div className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden flex-shrink-0 block sm:hidden border border-gray-200">
-                          <img
-                            src={item.imageUrl || "https://placehold.co/100x100?text=+"}
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-
-                        <CardFooter className="p-0 sm:p-4 sm:pt-2 flex items-center justify-between border-t mt-0 sm:mt-2 bg-gray-50/50 hidden sm:flex">
+                          <p className="text-xs sm:text-sm text-gray-500 line-clamp-2 mt-1">{item.description}</p>
+                        </CardHeader>
+                        <CardFooter className="p-2 sm:p-4 pt-2 flex items-center justify-between border-t mt-2 bg-gray-50/50 hidden sm:flex">
                           <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600">
                             <Avatar className="h-5 w-5 sm:h-6 sm:w-6 ring-2 ring-white">
                               <AvatarImage src={owner?.avatarUrl} />
