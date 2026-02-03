@@ -7,7 +7,7 @@ function getResendClient() {
     return new Resend(key);
 }
 
-export async function sendRequestNotification(toEmail: string, itemName: string, requesterName: string, itemId: string) {
+export async function sendRequestNotification(toEmail: string, itemName: string, requesterName: string, itemId: string, replyToEmail?: string) {
     const resend = getResendClient();
     const apiKey = process.env.RESEND_API_KEY;
     // Hardcode fallback to production domain if env var is missing, unless in actual development
@@ -17,7 +17,7 @@ export async function sendRequestNotification(toEmail: string, itemName: string,
 
     if (!apiKey || apiKey === 're_123') {
         console.warn('RESEND_API_KEY is missing. Falling back to console log.');
-        console.log(`[MOCK EMAIL] To: ${toEmail}, Item: ${itemName}, Requester: ${requesterName}, URL: ${itemUrl}`);
+        console.log(`[MOCK EMAIL] To: ${toEmail}, Item: ${itemName}, Requester: ${requesterName}, ReplyTo: ${replyToEmail}, URL: ${itemUrl}`);
         return { success: true };
     }
 
@@ -25,6 +25,7 @@ export async function sendRequestNotification(toEmail: string, itemName: string,
         const { data, error } = await resend.emails.send({
             from: 'FriendsHaveStuff <hello@friendshavestuff.com>',
             to: [toEmail],
+            replyTo: replyToEmail,
             subject: `Action Required: Request for ${itemName}`,
             html: `
                 <div>
@@ -58,12 +59,12 @@ export async function sendRequestNotification(toEmail: string, itemName: string,
     }
 }
 
-export async function sendStatusUpdateEmail(toEmail: string, itemName: string, status: string, message?: string) {
+export async function sendStatusUpdateEmail(toEmail: string, itemName: string, status: string, message?: string, replyToEmail?: string) {
     const resend = getResendClient();
     const apiKey = process.env.RESEND_API_KEY;
 
     if (!apiKey || apiKey === 're_123') {
-        console.log(`[MOCK EMAIL] To: ${toEmail}, Item: ${itemName}, Status: ${status}, Message: ${message}`);
+        console.log(`[MOCK EMAIL] To: ${toEmail}, Item: ${itemName}, Status: ${status}, Message: ${message}, ReplyTo: ${replyToEmail}`);
         return { success: true };
     }
 
@@ -74,6 +75,7 @@ export async function sendStatusUpdateEmail(toEmail: string, itemName: string, s
         const { data, error } = await resend.emails.send({
             from: 'FriendsHaveStuff <hello@friendshavestuff.com>',
             to: [toEmail],
+            replyTo: replyToEmail,
             subject: subject,
             html: `
                 <div>
