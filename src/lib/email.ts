@@ -67,7 +67,7 @@ export async function sendRequestNotification(toEmail: string, itemName: string,
     }
 }
 
-export async function sendStatusUpdateEmail(toEmail: string, itemName: string, status: string, message?: string, replyToEmail?: string) {
+export async function sendStatusUpdateEmail(toEmail: string, itemName: string, status: string, message?: string, replyToEmail?: string, ownerName?: string, startDate?: string, endDate?: string, itemId?: string) {
     const resend = getResendClient();
     const apiKey = process.env.RESEND_API_KEY;
 
@@ -79,6 +79,25 @@ export async function sendStatusUpdateEmail(toEmail: string, itemName: string, s
     const subject = `Request ${status.charAt(0).toUpperCase() + status.slice(1)}: ${itemName}`;
     const color = status === 'approved' ? '#16a34a' : '#dc2626'; // Green or Red
 
+    // Date formatting
+    let dateRange = '';
+    if (startDate) {
+        const start = new Date(startDate).toLocaleDateString();
+        const end = endDate ? new Date(endDate).toLocaleDateString() : start;
+        dateRange = `${start} - ${end}`;
+    }
+
+    // Default message vs Custom message
+    let statusMessage = `<p>Your request to borrow <strong>${itemName}</strong> has been <strong style="color: ${color}">${status}</strong>.</p>`;
+
+    if (status === 'approved' && ownerName && dateRange) {
+        statusMessage = `<p>Your request to borrow <strong>${itemName}</strong> on <strong>${dateRange}</strong> from <strong>${ownerName}</strong> has been <strong style="color: ${color}">${status}</strong>.</p>`;
+    }
+
+    // Link destination: If Item ID is provided, go to Item page, otherwise Requests page fallback
+    const linkUrl = itemId ? `${getAppUrl()}/items/${itemId}` : `${getAppUrl()}/requests`;
+    const linkText = itemId ? 'View Item' : 'View Requests';
+
     try {
         const { data, error } = await resend.emails.send({
             from: 'FriendsHaveStuff <hello@friendshavestuff.com>',
@@ -88,7 +107,7 @@ export async function sendStatusUpdateEmail(toEmail: string, itemName: string, s
             html: `
                 <div>
                     <h2>Request ${status.toUpperCase()}</h2>
-                    <p>Your request to borrow <strong>${itemName}</strong> has been <strong style="color: ${color}">${status}</strong>.</p>
+                    ${statusMessage}
                     
                     ${message ? `
                         <div style="background-color: #f3f4f6; padding: 15px; border-left: 4px solid ${color}; margin: 20px 0;">
@@ -98,8 +117,8 @@ export async function sendStatusUpdateEmail(toEmail: string, itemName: string, s
                     ` : ''}
 
                     <p>
-                        <a href="${getAppUrl()}/requests" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-                            View Requests
+                        <a href="${linkUrl}" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                            ${linkText}
                         </a>
                     </p>
                 </div>

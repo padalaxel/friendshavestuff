@@ -39,7 +39,17 @@ export default async function RequestsPage() {
         const item = await getItemById(updatedReq.itemId);
 
         if (requester && item && session) {
-            await sendStatusUpdateEmail(requester.email, item.name, status, message, session.email);
+            await sendStatusUpdateEmail(
+                requester.email,
+                item.name,
+                status,
+                message,
+                session.email,
+                session.name || session.email,
+                updatedReq.startDate,
+                updatedReq.endDate,
+                item.id
+            );
         }
 
         revalidatePath('/requests');

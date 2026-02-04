@@ -5,15 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Send } from 'lucide-react';
 import { BorrowRequest } from '@/lib/db';
 
-type Item = {
-    id: string;
-    ownerId: string;
-    name: string;
-    category?: string;
-    description?: string;
-    imageUrl?: string;
-    // ... other fields if needed for display, but main logic needs IDs
-};
 
 type ItemRequestFormProps = {
     bookings: BorrowRequest[];
