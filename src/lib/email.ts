@@ -7,11 +7,18 @@ function getResendClient() {
     return new Resend(key);
 }
 
+function getAppUrl() {
+    if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
+    if (process.env.NEXT_PUBLIC_VERCEL_URL) return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
+    if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+    // Fallback logic
+    return process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://friendshavestuff.com';
+}
+
 export async function sendRequestNotification(toEmail: string, itemName: string, requesterName: string, itemId: string, replyToEmail?: string) {
     const resend = getResendClient();
     const apiKey = process.env.RESEND_API_KEY;
-    // Hardcode fallback to production domain if env var is missing, unless in actual development
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://friendshavestuff.com');
+    const appUrl = getAppUrl();
     const itemUrl = `${appUrl}/items/${itemId}`;
     const requestsUrl = `${appUrl}/requests`;
 
@@ -32,7 +39,7 @@ export async function sendRequestNotification(toEmail: string, itemName: string,
                     <h2>New Borrow Request</h2>
                     <p><strong>${requesterName}</strong> wants to borrow your <strong><a href="${itemUrl}">${itemName}</a></strong>.</p>
                     
-                    <p>Please login to approve or decline this request.</p>
+                    <p>Reply to this e-mail to send a message to <strong>${requesterName}</strong> or approve their request by clicking the button below!</p>
 
                     <div style="margin: 24px 0;">
                         <a href="${requestsUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
@@ -90,7 +97,7 @@ export async function sendStatusUpdateEmail(toEmail: string, itemName: string, s
                     ` : ''}
 
                     <p>
-                        <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/profile" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                        <a href={`${ getAppUrl() } / requests`} style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
                             View Requests
                         </a>
                     </p>
@@ -98,16 +105,16 @@ export async function sendStatusUpdateEmail(toEmail: string, itemName: string, s
             `
         });
 
-        if (error) {
-            console.error('Error sending email:', error);
-            return { success: false, error };
-        }
-
-        return { success: true, data };
-    } catch (err) {
-        console.error('Exception sending email:', err);
-        return { success: false, error: err };
+    if (error) {
+        console.error('Error sending email:', error);
+        return { success: false, error };
     }
+
+    return { success: true, data };
+} catch (err) {
+    console.error('Exception sending email:', err);
+    return { success: false, error: err };
+}
 }
 
 export async function sendTestEmail(toEmail: string) {

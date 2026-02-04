@@ -10,12 +10,15 @@ import { Plus, LogOut, LayoutGrid, List } from 'lucide-react';
 import { redirect } from 'next/navigation';
 import { Search } from '@/components/search';
 import { CategoryFilter } from '@/components/category-filter';
+import { SortSelect } from '@/components/sort-select';
+import { Suspense } from 'react';
 
 export default async function Home(props: {
   searchParams: Promise<{
     q?: string;
     category?: string;
     view?: string;
+    sort?: string;
   }>;
 }) {
   const session = await getSession();
@@ -40,6 +43,7 @@ export default async function Home(props: {
   const query = searchParams?.q?.toLowerCase() || '';
   const categoryFilter = searchParams?.category;
   const view = searchParams?.view || 'grid';
+  const sort = searchParams?.sort || 'date';
   const isListView = view === 'list';
 
   const filteredItems = allItems.filter((item) => {
@@ -50,8 +54,25 @@ export default async function Home(props: {
     return matchesSearch && matchesCategory;
   });
 
-  if (isListView) {
-    filteredItems.sort((a, b) => a.name.localeCompare(b.name));
+  // Sort Items based on selection
+  filteredItems.sort((a, b) => {
+    if (sort === 'alpha') {
+      return a.name.localeCompare(b.name);
+    } else {
+      // Default: Date (Newest first)
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+  });
+
+  if (isListView && sort !== 'alpha') {
+    // If list view and already sorted by date, no extra sort needed unless we want to enforce name sort for list view specifically.
+    // The previous code forced name sort on list view.
+    // Let's Respect the user's sort choice for now, but if they haven't chosen (default 'date'), list view might feel better sorted by name?
+    // The previous logic was: if (isListView) filteredItems.sort((a, b) => a.name.localeCompare(b.name));
+    // Now we likely want to respect the explicit sort.
+    // If the user explicitly asks for "Recently Added", we should probably show that.
+    // If the user explicitly asks for "Alphabetical", we show that.
+    // If the requirement is "we should be able to sort by recently added, or alphabetical", then explicit sort wins.
   }
 
   return (
@@ -79,15 +100,19 @@ export default async function Home(props: {
         </div>
 
         {/* List/Grid Content */}
+        {/* List/Grid Content */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h2 className="text-xl font-bold text-gray-900">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
+              <h2 className="text-xl font-bold text-gray-900 whitespace-nowrap">
                 {categoryFilter ? `${categoryFilter} Items` : 'All Gear'}
                 <span className="ml-2 text-sm font-normal text-gray-500">({filteredItems.length})</span>
               </h2>
+              <Suspense fallback={<div className="h-10 w-[180px] bg-gray-100 animate-pulse rounded-md" />}>
+                <SortSelect />
+              </Suspense>
               {/* View Toggle */}
-              <div className="flex items-center bg-white border rounded-lg p-0.5 shadow-sm">
+              <div className="flex items-center bg-white border rounded-lg p-0.5 shadow-sm ml-auto sm:ml-0">
                 <Link href={{ query: { ...searchParams, view: 'grid' } }}>
                   <Button variant={!isListView ? 'secondary' : 'ghost'} size="icon" className="h-8 w-8 rounded-md">
                     <LayoutGrid className="h-4 w-4" />
