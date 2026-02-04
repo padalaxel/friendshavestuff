@@ -9,10 +9,11 @@ function getResendClient() {
 
 function getAppUrl() {
     if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
-    if (process.env.NEXT_PUBLIC_VERCEL_URL) return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
-    if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+    // Prioritize main Vercel domain over deployment specific URLs if not hitting localhost
+    if (process.env.NODE_ENV === 'production') return 'https://friendshavestuff.vercel.app';
+
     // Fallback logic
-    return process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://friendshavestuff.com';
+    return 'http://localhost:3000';
 }
 
 export async function sendRequestNotification(toEmail: string, itemName: string, requesterName: string, itemId: string, replyToEmail?: string) {

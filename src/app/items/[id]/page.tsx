@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle, XCircle, RefreshCw, Send } from 'lucide-react';
+import { ArrowLeft, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
+import { ItemRequestForm } from '@/components/item-request-form';
 import { Metadata } from 'next';
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
@@ -290,34 +291,10 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
                                     ) : (
                                         <Card>
                                             <CardContent className="p-4 pt-6">
-                                                <form action={requestItem} className="space-y-4">
-                                                    {bookings.length > 0 && (
-                                                        <div className="bg-red-50 border border-red-100 rounded-md p-3 text-sm text-red-800 mb-4">
-                                                            <p className="font-semibold mb-1">Unavailable Dates:</p>
-                                                            <ul className="list-disc pl-4 space-y-0.5">
-                                                                {bookings.map(b => (
-                                                                    <li key={b.id}>
-                                                                        {b.startDate ? `${new Date(b.startDate).toLocaleDateString()} - ${new Date(b.endDate || b.startDate).toLocaleDateString()}` : 'Booked (No dates)'}
-                                                                    </li>
-                                                                ))}
-                                                            </ul>
-                                                        </div>
-                                                    )}
-                                                    <div className="grid grid-cols-2 gap-4">
-                                                        <div className="space-y-2">
-                                                            <label className="text-xs font-semibold uppercase text-gray-500">From</label>
-                                                            <input type="date" name="startDate" required className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <label className="text-xs font-semibold uppercase text-gray-500">To</label>
-                                                            <input type="date" name="endDate" required className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                                                        </div>
-                                                    </div>
-                                                    <Button className="w-full h-12 text-lg">
-                                                        <Send className="mr-2 h-5 w-5" />
-                                                        Request to Borrow
-                                                    </Button>
-                                                </form>
+                                                <ItemRequestForm
+                                                    bookings={bookings}
+                                                    action={requestItem}
+                                                />
                                             </CardContent>
                                         </Card>
                                     )}

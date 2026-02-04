@@ -102,29 +102,67 @@ export default async function Home(props: {
         {/* List/Grid Content */}
         {/* List/Grid Content */}
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-4 w-full sm:w-auto">
-              <h2 className="text-xl font-bold text-gray-900 whitespace-nowrap">
-                {categoryFilter ? `${categoryFilter} Items` : 'All Gear'}
-                <span className="ml-2 text-sm font-normal text-gray-500">({filteredItems.length})</span>
-              </h2>
+          <div className="flex flex-col gap-4">
+            {/* Mobile Header Layout */}
+            <div className="flex flex-col md:hidden gap-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900 whitespace-nowrap">
+                  {categoryFilter ? `${categoryFilter} Items` : 'All Gear'}
+                  <span className="ml-2 text-sm font-normal text-gray-500">({filteredItems.length})</span>
+                </h2>
+              </div>
+
+              <div className="flex items-center justify-between">
+                {/* View Toggle (Left) */}
+                <div className="flex items-center bg-white border rounded-lg p-0.5 shadow-sm">
+                  <Link href={{ query: { ...searchParams, view: 'grid' } }}>
+                    <Button variant={!isListView ? 'secondary' : 'ghost'} size="icon" className="h-8 w-8 rounded-md">
+                      <LayoutGrid className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Link href={{ query: { ...searchParams, view: 'list' } }}>
+                    <Button variant={isListView ? 'secondary' : 'ghost'} size="icon" className="h-8 w-8 rounded-md">
+                      <List className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+
+                {/* Sort (Right) */}
+                <Suspense fallback={<div className="h-10 w-[180px] bg-gray-100 animate-pulse rounded-md" />}>
+                  <SortSelect />
+                </Suspense>
+              </div>
+            </div>
+
+            {/* Desktop Header Layout */}
+            <div className="hidden md:flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <h2 className="text-xl font-bold text-gray-900 whitespace-nowrap">
+                  {categoryFilter ? `${categoryFilter} Items` : 'All Gear'}
+                  <span className="ml-2 text-sm font-normal text-gray-500">({filteredItems.length})</span>
+                </h2>
+
+                {/* View Toggle */}
+                <div className="flex items-center bg-white border rounded-lg p-0.5 shadow-sm">
+                  <Link href={{ query: { ...searchParams, view: 'grid' } }}>
+                    <Button variant={!isListView ? 'secondary' : 'ghost'} size="icon" className="h-8 w-8 rounded-md">
+                      <LayoutGrid className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Link href={{ query: { ...searchParams, view: 'list' } }}>
+                    <Button variant={isListView ? 'secondary' : 'ghost'} size="icon" className="h-8 w-8 rounded-md">
+                      <List className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Sort (Far Right) */}
               <Suspense fallback={<div className="h-10 w-[180px] bg-gray-100 animate-pulse rounded-md" />}>
                 <SortSelect />
               </Suspense>
-              {/* View Toggle */}
-              <div className="flex items-center bg-white border rounded-lg p-0.5 shadow-sm ml-auto sm:ml-0">
-                <Link href={{ query: { ...searchParams, view: 'grid' } }}>
-                  <Button variant={!isListView ? 'secondary' : 'ghost'} size="icon" className="h-8 w-8 rounded-md">
-                    <LayoutGrid className="h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link href={{ query: { ...searchParams, view: 'list' } }}>
-                  <Button variant={isListView ? 'secondary' : 'ghost'} size="icon" className="h-8 w-8 rounded-md">
-                    <List className="h-4 w-4" />
-                  </Button>
-                </Link>
-              </div>
             </div>
+
             {query && <span className="text-sm text-gray-500">Results for &quot;{query}&quot;</span>}
           </div>
 
