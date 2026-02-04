@@ -124,7 +124,7 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
 
         if (owner && owner.email) {
             console.log('[RequestItem] Sending email to:', owner.email);
-            const emailResult = await sendRequestNotification(owner.email, item.name, session.name || session.email, item.id, session.email);
+            const emailResult = await sendRequestNotification(owner.email, item.name, session.name || session.email, item.id, session.email, startDateStr, endDateStr);
             console.log('[RequestItem] Email result:', emailResult);
         } else {
             console.error('[RequestItem] Owner not found or missing email. Notification SKIPPED.');

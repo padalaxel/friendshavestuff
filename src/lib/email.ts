@@ -16,31 +16,44 @@ function getAppUrl() {
     return 'http://localhost:3000';
 }
 
-export async function sendRequestNotification(toEmail: string, itemName: string, requesterName: string, itemId: string, replyToEmail?: string) {
+export async function sendRequestNotification(toEmail: string, itemName: string, requesterName: string, itemId: string, replyToEmail?: string, startDate?: string, endDate?: string) {
     const resend = getResendClient();
     const apiKey = process.env.RESEND_API_KEY;
     const appUrl = getAppUrl();
     const itemUrl = `${appUrl}/items/${itemId}`;
     const requestsUrl = `${appUrl}/requests`;
 
+    // Date formatting
+    let dateRange = '';
+    if (startDate) {
+        const start = new Date(startDate).toLocaleDateString();
+        const end = endDate ? new Date(endDate).toLocaleDateString() : start;
+        dateRange = `${start} - ${end}`;
+    }
+
     if (!apiKey || apiKey === 're_123') {
         console.warn('RESEND_API_KEY is missing. Falling back to console log.');
-        console.log(`[MOCK EMAIL] To: ${toEmail}, Item: ${itemName}, Requester: ${requesterName}, ReplyTo: ${replyToEmail}, URL: ${itemUrl}`);
+        console.log(`[MOCK EMAIL] To: ${toEmail}, Item: ${itemName}, Requester: ${requesterName}, Dates: ${dateRange}, ReplyTo: ${replyToEmail}, URL: ${itemUrl}`);
         return { success: true };
     }
+
+    const requestSubject = startDate ? `Request for ${itemName} on ${dateRange}` : `Request for ${itemName}`;
+    const requestMessage = startDate
+        ? `<p><strong>${requesterName}</strong> wants to borrow your <strong><a href="${itemUrl}">${itemName}</a></strong> on <strong>${dateRange}</strong>.</p>`
+        : `<p><strong>${requesterName}</strong> wants to borrow your <strong><a href="${itemUrl}">${itemName}</a></strong>.</p>`;
 
     try {
         const { data, error } = await resend.emails.send({
             from: 'FriendsHaveStuff <hello@friendshavestuff.com>',
             to: [toEmail],
             replyTo: replyToEmail,
-            subject: `Action Required: Request for ${itemName}`,
+            subject: `Action Required: ${requestSubject}`,
             html: `
                 <div>
                     <h2>New Borrow Request</h2>
-                    <p><strong>${requesterName}</strong> wants to borrow your <strong><a href="${itemUrl}">${itemName}</a></strong>.</p>
+                    ${requestMessage}
                     
-                    <p>Reply to this e-mail to send a message to <strong>${requesterName}</strong> or approve their request by clicking the button below!</p>
+                    <p>Replying to this message will e-mail <strong>${requesterName}</strong> directly. To approve or deny the request, click the button below.</p>
 
                     <div style="margin: 24px 0;">
                         <a href="${requestsUrl}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
@@ -111,10 +124,12 @@ export async function sendStatusUpdateEmail(toEmail: string, itemName: string, s
                     
                     ${message ? `
                         <div style="background-color: #f3f4f6; padding: 15px; border-left: 4px solid ${color}; margin: 20px 0;">
-                            <strong>Message from Owner:</strong><br/>
+                            <strong>Message from ${ownerName || 'Owner'}:</strong><br/>
                             ${message}
                         </div>
                     ` : ''}
+
+                    <p>Replying to this message will e-mail <strong>${ownerName || 'the owner'}</strong> directly.</p>
 
                     <p>
                         <a href="${linkUrl}" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
