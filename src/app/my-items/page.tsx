@@ -100,12 +100,26 @@ export default async function MyItemsPage() {
                                                         <span>{owner?.name}</span>
                                                     </div>
                                                 </div>
+
+                                                {/* Message from Owner (if any) */}
+                                                {req?.message && (
+                                                    <div className="mt-3 text-sm bg-white p-2 rounded border border-amber-100 text-gray-700">
+                                                        <span className="font-medium text-amber-800 text-xs uppercase tracking-wide block mb-1">Message from Owner</span>
+                                                        "{req.message}"
+                                                    </div>
+                                                )}
                                             </div>
 
                                             <div className="mt-4 pt-4 border-t border-amber-100 flex items-center justify-between">
-                                                <div className="text-sm">
-                                                    <span className="text-amber-700 font-medium">Return By: </span>
-                                                    {req?.endDate ? new Date(req.endDate).toLocaleDateString() : 'Indefinite'}
+                                                <div className="text-sm flex flex-col">
+                                                    <div>
+                                                        <span className="text-amber-700 font-medium">Start: </span>
+                                                        {req?.startDate ? new Date(req.startDate).toLocaleDateString() : 'Unknown'}
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-amber-700 font-medium">Return: </span>
+                                                        {req?.endDate ? new Date(req.endDate).toLocaleDateString() : 'Indefinite'}
+                                                    </div>
                                                 </div>
                                                 <Link href={`/items/${item.id}`}>
                                                     <Button variant="outline" size="sm" className="border-amber-200 hover:bg-amber-100 text-amber-900">
