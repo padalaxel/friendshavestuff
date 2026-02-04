@@ -29,7 +29,7 @@ export default async function Home(props: {
   const users = await getUsers();
 
   // 1. Calculate Category Counts
-  const ALL_CATEGORIES = ['Outdoors', 'Tools', 'Kitchen', 'Garden/Yard', 'Electronics', 'Recreation', 'Travel', 'Clothing', 'Household', 'Other'];
+  const ALL_CATEGORIES = ['Outdoors', 'Tools', 'Kitchen', 'Garden/Yard', 'Electronics', 'Recreation', 'Travel', 'Clothing', 'Household'];
 
   const categoryCounts = allItems.reduce((acc, item) => {
     const cat = item.category || 'Other';

@@ -78,14 +78,14 @@ export function CategoryFilter({ categories }: { categories: { name: string, cou
             </div>
 
             {/* Desktop Buttons */}
-            <div className="hidden md:flex flex-wrap gap-4">
+            <div className="hidden md:flex flex-wrap lg:flex-nowrap gap-2 lg:gap-4 overflow-x-auto pb-2">
                 <Button
                     variant={!currentCategory ? "default" : "outline"}
                     onClick={() => handleCategory(null)}
-                    className="h-auto py-4 px-6 flex flex-col items-center gap-2 min-w-[100px]"
+                    className="h-auto py-3 px-3 lg:py-4 lg:px-6 flex flex-col items-center gap-1 lg:gap-2 min-w-[80px] lg:min-w-[100px] flex-shrink-0"
                 >
-                    <Package className="h-6 w-6" />
-                    <span className="text-sm font-medium">All Items</span>
+                    <Package className="h-5 w-5 lg:h-6 lg:w-6" />
+                    <span className="text-xs lg:text-sm font-medium">All Items</span>
                 </Button>
 
                 {categories.map((cat) => {
@@ -96,14 +96,14 @@ export function CategoryFilter({ categories }: { categories: { name: string, cou
                             variant={currentCategory === cat.name ? "default" : "outline"}
                             onClick={() => handleCategory(cat.name)}
                             className={cn(
-                                "h-auto py-4 px-6 flex flex-col items-center gap-2 min-w-[100px]",
+                                "h-auto py-3 px-3 lg:py-4 lg:px-6 flex flex-col items-center gap-1 lg:gap-2 min-w-[80px] lg:min-w-[100px] flex-shrink-0",
                                 currentCategory === cat.name ? "ring-2 ring-offset-2 ring-blue-500" : ""
                             )}
                         >
-                            <Icon className="h-6 w-6" />
+                            <Icon className="h-5 w-5 lg:h-6 lg:w-6" />
                             <div className="flex flex-col items-center">
-                                <span className="text-sm font-medium">{cat.name}</span>
-                                <span className="text-xs opacity-70">{cat.count} items</span>
+                                <span className="text-xs lg:text-sm font-medium whitespace-nowrap">{cat.name}</span>
+                                <span className="text-[10px] lg:text-xs opacity-70">{cat.count} items</span>
                             </div>
                         </Button>
                     );
