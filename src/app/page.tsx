@@ -29,15 +29,19 @@ export default async function Home(props: {
   const users = await getUsers();
 
   // 1. Calculate Category Counts
+  const ALL_CATEGORIES = ['Outdoors', 'Tools', 'Kitchen', 'Garden/Yard', 'Electronics', 'Recreation', 'Travel', 'Clothing', 'Household', 'Other'];
+
   const categoryCounts = allItems.reduce((acc, item) => {
     const cat = item.category || 'Other';
     acc[cat] = (acc[cat] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
-  const categories = Object.entries(categoryCounts)
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  // Ensure all categories are present, even with 0 count
+  const categories = ALL_CATEGORIES.map(name => ({
+    name,
+    count: categoryCounts[name] || 0
+  }));
 
   // 2. Filter & Sort Items
   const query = searchParams?.q?.toLowerCase() || '';
