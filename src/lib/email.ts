@@ -97,7 +97,7 @@ export async function sendStatusUpdateEmail(toEmail: string, itemName: string, s
                     ` : ''}
 
                     <p>
-                        <a href={`${ getAppUrl() } / requests`} style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                        <a href="${getAppUrl()}/requests" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
                             View Requests
                         </a>
                     </p>
@@ -105,16 +105,16 @@ export async function sendStatusUpdateEmail(toEmail: string, itemName: string, s
             `
         });
 
-    if (error) {
-        console.error('Error sending email:', error);
-        return { success: false, error };
-    }
+        if (error) {
+            console.error('Error sending email:', error);
+            return { success: false, error };
+        }
 
-    return { success: true, data };
-} catch (err) {
-    console.error('Exception sending email:', err);
-    return { success: false, error: err };
-}
+        return { success: true, data };
+    } catch (err) {
+        console.error('Exception sending email:', err);
+        return { success: false, error: err };
+    }
 }
 
 export async function sendTestEmail(toEmail: string) {
