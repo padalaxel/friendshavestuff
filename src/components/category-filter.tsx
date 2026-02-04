@@ -9,7 +9,7 @@ import {
     Utensils,
     Shovel, // Garden/Yard
     MonitorSmartphone,
-    Gamepad2,
+    Dumbbell,
     Plane, // Travel
     Shirt, // Clothing
     Armchair, // Household
@@ -23,7 +23,7 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
     'Kitchen': Utensils,
     'Garden/Yard': Shovel,
     'Electronics': MonitorSmartphone,
-    'Recreation': Gamepad2,
+    'Recreation': Dumbbell,
     'Travel': Plane,
     'Clothing': Shirt,
     'Household': Armchair,
