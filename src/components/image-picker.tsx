@@ -90,24 +90,41 @@ export default function ImagePicker({ name, initialPreview }: ImagePickerProps) 
                     </label>
                 </div>
             ) : (
-                <div className="relative rounded-lg overflow-hidden border border-gray-200 bg-gray-50">
-                    <div className="aspect-video relative">
+                <div className="relative rounded-lg overflow-hidden border border-gray-200 bg-gray-50 group">
+                    <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        id={`picker-${name}-replace`}
+                        onChange={handleFileSelect}
+                        disabled={isCompressing}
+                    />
+                    <label
+                        htmlFor={`picker-${name}-replace`}
+                        className="block aspect-video relative cursor-pointer"
+                    >
                         {/* We use standard img for blob preview validity */}
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src={preview}
                             alt="Preview"
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover transition-opacity group-hover:opacity-90"
                         />
-                    </div>
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                            <span className="opacity-0 group-hover:opacity-100 bg-black/50 text-white text-xs px-2 py-1 rounded-full pointer-events-none">
+                                Tap to replace
+                            </span>
+                        </div>
+                    </label>
+
                     <button
                         type="button"
                         onClick={clearImage}
-                        className="absolute top-2 right-2 p-1 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
+                        className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors z-10"
                     >
                         <X className="h-4 w-4" />
                     </button>
-                    <div className="absolute bottom-2 left-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded">
+                    <div className="absolute bottom-2 left-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded pointer-events-none">
                         Ready to upload
                     </div>
                 </div>

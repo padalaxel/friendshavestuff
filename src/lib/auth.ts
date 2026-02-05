@@ -6,6 +6,9 @@ export async function getSession() {
 
     if (!user) return null;
 
+    const ADMIN_EMAILS = ['paulrogers1965@gmail.com'];
+    const isAdmin = ADMIN_EMAILS.includes(user.email || '');
+
     // Sync: Ensure the allowed_user row has the user_id linked
     // First try exact match
     const { data } = await supabase
@@ -46,6 +49,7 @@ export async function getSession() {
         id: user.id,
         email: user.email!,
         name: user.user_metadata.full_name || user.email!.split('@')[0],
-        avatarUrl: user.user_metadata.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.email}`
+        avatarUrl: user.user_metadata.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.email}`,
+        isAdmin
     };
 }
