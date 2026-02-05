@@ -8,18 +8,18 @@ export async function getSession() {
 
     // Sync: Ensure the allowed_user row has the user_id linked
     // First try exact match
-    const { count } = await supabase
+    const { data } = await supabase
         .from('allowed_users')
         .update({ user_id: user.id })
         .eq('email', user.email!)
         .is('user_id', null)
-        .select('', { count: 'exact', head: true }); // Use count to return number of rows affected
+        .select('id');
 
     // If no rows updated (and we don't know if it was because it's already linked or because not found),
     // let's check for "fuzzy" match if the user isn't already linked in DB.
     // Ideally we'd check if `user` is already linked to avoid redundant work, but `update` is idempotent-ish if we check user_id is null.
 
-    if (count === 0) {
+    if (!data || data.length === 0) {
         // Fetch all unlinked allowed users to check for normalized match
         const { data: unlinked } = await supabase
             .from('allowed_users')
