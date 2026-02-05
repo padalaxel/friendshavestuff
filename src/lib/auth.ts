@@ -6,7 +6,7 @@ export async function getSession() {
 
     if (!user) return null;
 
-    const ADMIN_EMAILS = ['paulrogers1965@gmail.com'];
+    const ADMIN_EMAILS = ['paul.s.rogers@gmail.com'];
     const isAdmin = ADMIN_EMAILS.includes(user.email || '');
 
     // Sync: Ensure the allowed_user row has the user_id linked
