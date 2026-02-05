@@ -26,24 +26,22 @@ function Calendar({
                 disabled: "text-gray-300 opacity-30 line-through decoration-red-500 decoration-2"
             }}
             components={{
-                components={{
                 Chevron: ({ orientation, ...props }) => {
-        switch (orientation) {
-            case "left":
-                return <ChevronLeft className="h-4 w-4" {...props} />
-            case "right":
-                return <ChevronRight className="h-4 w-4" {...props} />
-            case "up":
-                return <ChevronUp className="h-4 w-4" {...props} />
-            case "down":
-                return <ChevronDown className="h-4 w-4" {...props} />
-            default:
-                return <ChevronRight className="h-4 w-4" {...props} />
-        }
-    },
-}}
+                    switch (orientation) {
+                        case "left":
+                            return <ChevronLeft className="h-4 w-4" {...props} />
+                        case "right":
+                            return <ChevronRight className="h-4 w-4" {...props} />
+                        case "up":
+                            return <ChevronUp className="h-4 w-4" {...props} />
+                        case "down":
+                            return <ChevronDown className="h-4 w-4" {...props} />
+                        default:
+                            return <ChevronRight className="h-4 w-4" {...props} />
+                    }
+                },
             }}
-{...props }
+            {...props}
         />
     )
 }
