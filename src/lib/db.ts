@@ -105,8 +105,8 @@ export async function createItem(item: { name: string; description?: string; cat
     return toItemModel(data as DBItem);
 }
 
-export async function updateItem(id: string, updates: Partial<Item>) {
-    const supabase = await createClient();
+export async function updateItem(id: string, updates: Partial<Item>, asAdmin: boolean = false) {
+    const supabase = await (asAdmin ? createAdminClient() : createClient());
 
     const dbUpdates: Partial<DBItem> = {};
     if (updates.name) dbUpdates.name = updates.name;
@@ -125,8 +125,8 @@ export async function updateItem(id: string, updates: Partial<Item>) {
     return toItemModel(data as DBItem);
 }
 
-export async function deleteItem(id: string) {
-    const supabase = await createClient();
+export async function deleteItem(id: string, asAdmin: boolean = false) {
+    const supabase = await (asAdmin ? createAdminClient() : createClient());
     const { error } = await supabase.from('items').delete().eq('id', id);
     if (error) throw error;
 }

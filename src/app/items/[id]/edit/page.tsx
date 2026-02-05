@@ -48,7 +48,7 @@ export default async function EditItemPage({ params }: { params: { id: string } 
             description,
             category,
             imageUrl
-        });
+        }, session.isAdmin);
 
         redirect(`/items/${id}`);
     }
@@ -59,7 +59,7 @@ export default async function EditItemPage({ params }: { params: { id: string } 
         // Re-verify auth for safety
         if (item.ownerId !== session.id && !session.isAdmin) return;
 
-        await deleteItem(id);
+        await deleteItem(id, session.isAdmin);
         redirect('/');
     }
 
