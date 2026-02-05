@@ -1,10 +1,12 @@
-'use client';
-
 import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Send } from 'lucide-react';
+import { Send, Calendar as CalendarIcon } from 'lucide-react';
 import { BorrowRequest } from '@/lib/db';
-
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+import { DateRange } from 'react-day-picker';
 
 type ItemRequestFormProps = {
     bookings: BorrowRequest[];
@@ -12,109 +14,92 @@ type ItemRequestFormProps = {
 };
 
 export function ItemRequestForm({ bookings, action }: ItemRequestFormProps) {
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
+    const [date, setDate] = useState<DateRange | undefined>();
     const [dateError, setDateError] = useState('');
 
-    const endDateRef = useRef<HTMLInputElement>(null);
-
-    const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newStart = e.target.value;
-        setStartDate(newStart);
-
-        // Auto-set end date if empty or before new start date
-        if (!endDate || newStart > endDate) {
-            setEndDate(newStart);
+    // Prepare disabled dates from bookings
+    const disabledDays = bookings.flatMap(b => {
+        if (!b.startDate) return [];
+        const start = new Date(b.startDate);
+        const end = new Date(b.endDate || b.startDate);
+        const days = [];
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+            days.push(new Date(d));
         }
+        return days;
+    });
 
-        // validate
-        validateDates(newStart, endDate || newStart);
-    };
+    const handleSelect = (range: DateRange | undefined) => {
+        setDate(range);
 
-    const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newEnd = e.target.value;
-        setEndDate(newEnd);
-        validateDates(startDate, newEnd);
-    };
+        if (range?.from && range?.to) {
+            // Check for overlaps in the newly selected range
+            const hasOverlap = disabledDays.some(disabledDate =>
+                disabledDate >= range.from! && disabledDate <= range.to!
+            );
 
-    const validateDates = (start: string, end: string) => {
-        if (!start || !end) {
+            if (hasOverlap) {
+                setDateError('Selected overlapping details');
+                // Optionally clear selection or let user fix it. 
+                // Let's keep it but show error.
+            } else {
+                setDateError('');
+            }
+        } else {
             setDateError('');
-            return;
         }
-
-        const s = new Date(start);
-        const e = new Date(end);
-
-        if (e < s) {
-            setDateError('End date cannot be before start date');
-            return;
-        }
-
-        // Check overlaps
-        const hasOverlap = bookings.some(b => {
-            if (!b.startDate) return false;
-            const bStart = new Date(b.startDate);
-            const bEnd = new Date(b.endDate || b.startDate);
-            return s <= bEnd && e >= bStart;
-        });
-
-        if (hasOverlap) {
-            setDateError('Selected dates overlap with an existing booking');
-            return;
-        }
-
-        setDateError('');
     };
 
     return (
         <form action={action} className="space-y-4">
-            {bookings.length > 0 && (
-                <div className="bg-red-50 border border-red-100 rounded-md p-3 text-sm text-red-800 mb-4">
-                    <p className="font-semibold mb-1">Unavailable Dates:</p>
-                    <ul className="list-disc pl-4 space-y-0.5">
-                        {bookings.map(b => (
-                            <li key={b.id}>
-                                {b.startDate ? `${new Date(b.startDate).toLocaleDateString()} - ${new Date(b.endDate || b.startDate).toLocaleDateString()}` : 'Booked'}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
+            <input type="hidden" name="startDate" value={date?.from ? format(date.from, 'yyyy-MM-dd') : ''} />
+            <input type="hidden" name="endDate" value={date?.to ? format(date.to, 'yyyy-MM-dd') : ''} />
 
-            <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2 cursor-pointer" onClick={() => (document.getElementById('startDateInput') as HTMLInputElement)?.showPicker?.()}>
-                    <label className="text-xs font-semibold uppercase text-gray-500 pointer-events-none">From</label>
-                    <input
-                        id="startDateInput"
-                        type="date"
-                        name="startDate"
-                        required
-                        className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                        value={startDate}
-                        onChange={handleStartDateChange}
-                    />
-                </div>
-                <div className="space-y-2 cursor-pointer" onClick={() => (document.getElementById('endDateInput') as HTMLInputElement)?.showPicker?.()}>
-                    <label className="text-xs font-semibold uppercase text-gray-500 pointer-events-none">To</label>
-                    <input
-                        id="endDateInput"
-                        type="date"
-                        name="endDate"
-                        required
-                        className="flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                        value={endDate}
-                        onChange={handleEndDateChange}
-                        ref={endDateRef}
-                    />
-                </div>
+            <div className="flex flex-col gap-2">
+                <Popover>
+                    <PopoverTrigger asChild>
+                        <Button
+                            id="date"
+                            variant={"outline"}
+                            className={cn(
+                                "w-full justify-start text-left font-normal h-12 text-base",
+                                !date && "text-muted-foreground"
+                            )}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {date?.from ? (
+                                date.to ? (
+                                    <>
+                                        {format(date.from, "LLL dd, y")} -{" "}
+                                        {format(date.to, "LLL dd, y")}
+                                    </>
+                                ) : (
+                                    format(date.from, "LLL dd, y")
+                                )
+                            ) : (
+                                <span>Pick a date range</span>
+                            )}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                            initialFocus
+                            mode="range"
+                            defaultMonth={date?.from}
+                            selected={date}
+                            onSelect={handleSelect}
+                            numberOfMonths={1}
+                            disabled={[...disabledDays, { before: new Date() }]}
+                        />
+                    </PopoverContent>
+                </Popover>
+
+                {dateError && (
+                    <p className="text-sm text-red-600 font-medium">{dateError}</p>
+                )}
             </div>
 
-            {dateError && (
-                <p className="text-sm text-red-600 font-medium">{dateError}</p>
-            )}
-
-            <Button className="w-full h-12 text-lg" disabled={!!dateError}>
+            <Button className="w-full h-12 text-lg" disabled={!date?.from || !date?.to || !!dateError}>
                 <Send className="mr-2 h-5 w-5" />
                 Request to Borrow
             </Button>
