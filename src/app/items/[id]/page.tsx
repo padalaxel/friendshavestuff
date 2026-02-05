@@ -152,11 +152,11 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {/* Image Col */}
                     <div className="space-y-4">
-                        <div className="w-full rounded-xl overflow-hidden bg-gray-50 shadow-sm border min-h-[300px] flex items-center justify-center">
+                        <div className="w-full rounded-xl overflow-hidden bg-gray-50 shadow-sm border min-h-[200px] md:min-h-[300px] flex items-center justify-center">
                             <img
                                 src={item.imageUrl || "https://placehold.co/800x600?text=No+Image"}
                                 alt={item.name}
-                                className="object-contain w-full h-auto max-h-[70vh]"
+                                className="object-contain w-full h-auto max-h-[40vh] md:max-h-[70vh]"
                             />
                         </div>
                     </div>
@@ -166,17 +166,7 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
                         <div>
                             <Badge variant="secondary" className="mb-2">{item.category || 'General'}</Badge>
                             <h1 className="text-3xl font-bold text-gray-900">{item.name}</h1>
-                        </div>
-
-                        <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
-                            <Avatar className="h-10 w-10">
-                                <AvatarImage src={owner?.avatarUrl} />
-                                <AvatarFallback>{owner?.name[0]}</AvatarFallback>
-                            </Avatar>
-                            <div>
-                                <p className="text-sm font-medium text-gray-900">Owned by {owner?.name}</p>
-                                <p className="text-xs text-gray-500">Member since {new Date().getFullYear()}</p>
-                            </div>
+                            <p className="text-sm text-gray-500 mt-1">Owned by {owner?.name || 'Unknown'}</p>
                         </div>
 
                         <div className="prose prose-sm text-gray-600">
@@ -186,10 +176,23 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
 
                         <div className="pt-6 border-t">
                             {/* Interaction Logic */}
-                            {canEdit ? (
+                            {/* Admin Controls (for non-owners) */}
+                            {session.isAdmin && !isOwner && (
+                                <div className="mb-6 p-4 bg-gray-100 rounded-lg border border-gray-200">
+                                    <div className="flex justify-between items-center">
+                                        <h3 className="text-sm font-semibold text-gray-700">Admin Actions</h3>
+                                        <Link href={`/items/${item.id}/edit`}>
+                                            <Button variant="outline" size="sm" className="bg-white">Edit / Delete</Button>
+                                        </Link>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Interaction Logic */}
+                            {isOwner ? (
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center">
-                                        <h3 className="text-lg font-semibold">{isOwner ? 'Owner Controls' : 'Admin Controls'}</h3>
+                                        <h3 className="text-lg font-semibold">Owner Controls</h3>
                                         <Link href={`/items/${item.id}/edit`}>
                                             <Button variant="outline" size="sm">Edit Listing</Button>
                                         </Link>
