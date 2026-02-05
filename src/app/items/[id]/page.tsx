@@ -40,6 +40,7 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
     let activeRequest: BorrowRequest | undefined;
 
     const isOwner = session.id === item.ownerId;
+    const canEdit = isOwner || session.isAdmin;
 
     // Define these outside so they are available in render
     let approvedReq: BorrowRequest | undefined;
@@ -185,10 +186,10 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
 
                         <div className="pt-6 border-t">
                             {/* Interaction Logic */}
-                            {isOwner ? (
+                            {canEdit ? (
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center">
-                                        <h3 className="text-lg font-semibold">Owner Controls</h3>
+                                        <h3 className="text-lg font-semibold">{isOwner ? 'Owner Controls' : 'Admin Controls'}</h3>
                                         <Link href={`/items/${item.id}/edit`}>
                                             <Button variant="outline" size="sm">Edit Listing</Button>
                                         </Link>

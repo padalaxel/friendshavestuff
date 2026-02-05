@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import ImagePicker from '@/components/image-picker';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
+import { SubmitButton } from '@/components/submit-button';
 
 const CATEGORIES = [
     'Outdoors', 'Tools', 'Kitchen', 'Garden/Yard', 'Electronics',
@@ -90,7 +91,7 @@ export default async function AddItemPage() {
                             </div>
 
                             <div className="pt-4">
-                                <Button type="submit" className="w-full">Create Item</Button>
+                                <SubmitButton className="w-full" loadingText="Creating Item...">Create Item</SubmitButton>
                             </div>
                         </form>
                     </CardContent>

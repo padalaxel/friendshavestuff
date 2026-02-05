@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import ImagePicker from '@/components/image-picker';
 import Link from 'next/link';
 import { ArrowLeft, Trash2 } from 'lucide-react';
+import { SubmitButton } from '@/components/submit-button';
 
 const CATEGORIES = [
     'Outdoors', 'Tools', 'Kitchen', 'Garden/Yard', 'Electronics',
@@ -23,7 +24,7 @@ export default async function EditItemPage({ params }: { params: { id: string } 
     if (!item) notFound();
 
     // Authorization check
-    if (item.ownerId !== session.id) {
+    if (item.ownerId !== session.id && !session.isAdmin) {
         return <div className="p-10 text-center">Unauthorized</div>;
     }
 
@@ -54,7 +55,10 @@ export default async function EditItemPage({ params }: { params: { id: string } 
 
     async function removeItem() {
         'use server';
-        if (!session) return;
+        if (!session || !item) return;
+        // Re-verify auth for safety
+        if (item.ownerId !== session.id && !session.isAdmin) return;
+
         await deleteItem(id);
         redirect('/');
     }
@@ -104,7 +108,7 @@ export default async function EditItemPage({ params }: { params: { id: string } 
                                 <Link href={`/items/${id}`} className="flex-1">
                                     <Button variant="outline" className="w-full" type="button">Cancel</Button>
                                 </Link>
-                                <Button type="submit" className="flex-1">Save Changes</Button>
+                                <SubmitButton className="flex-1" loadingText="Saving...">Save Changes</SubmitButton>
                             </div>
                         </form>
 
