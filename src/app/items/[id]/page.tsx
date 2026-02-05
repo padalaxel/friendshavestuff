@@ -1,4 +1,4 @@
-import { getItemById, getUsers, createBorrowRequest, getRequestsForUser, updateRequestStatus, BorrowRequest } from '@/lib/db';
+import { getItemById, getUsers, createBorrowRequest, getRequestsForUser, getRequestsForItem, updateRequestStatus, BorrowRequest } from '@/lib/db';
 import { sendRequestNotification } from '@/lib/email';
 import { getSession } from '@/lib/auth';
 import { redirect, notFound } from 'next/navigation';
@@ -32,7 +32,8 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
 
     // Check ongoing requests
     const requests = await getRequestsForUser(session.id); // For requester view
-    const ownerRequests = await getRequestsForUser(item.ownerId); // For owner view (this is imperfect, but fine for local MVP)
+    const ownerRequests = await getRequestsForUser(item.ownerId); // For owner view
+    const requestsForItem = await getRequestsForItem(item.id); // For history
 
     // Find relevant request for THIS item
     // If I am requester: find my request for this item
@@ -60,6 +61,7 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
     }
 
     // Get all relevant requests for this item to show availability
+    // Using filtered ownerRequests for bookings logic
     const itemRequests = ownerRequests.filter(r => r.itemId === item.id);
     const bookings = itemRequests.filter(r => r.status === 'approved');
 
@@ -304,6 +306,45 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
                                     )}
                                 </div>
                             )}
+                        </div>
+
+                        {/* Borrowing History Section */}
+                        <div className="pt-6 border-t">
+                            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">Borrowing History</h3>
+                            {(() => {
+                                // Filter for past history
+                                const history = requestsForItem.filter(r => {
+                                    const isReturned = r.status === 'returned';
+                                    const isPast = r.endDate ? new Date(r.endDate) < new Date() : false;
+                                    // Show if returned OR (approved and past)
+                                    return isReturned || (r.status === 'approved' && isPast);
+                                });
+
+                                if (history.length === 0) {
+                                    return <p className="text-sm text-gray-500 italic">No previous borrowing history.</p>;
+                                }
+
+                                return (
+                                    <div className="space-y-3">
+                                        {history.map(req => (
+                                            <div key={req.id} className="flex items-center justify-between text-sm bg-gray-50 p-2 rounded">
+                                                <div className="flex items-center gap-2">
+                                                    <Avatar className="h-6 w-6">
+                                                        <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${users.find(u => u.id === req.requesterId)?.email}`} />
+                                                        <AvatarFallback>?</AvatarFallback>
+                                                    </Avatar>
+                                                    <span className="font-medium text-gray-700">
+                                                        {users.find(u => u.id === req.requesterId)?.name || 'Unknown User'}
+                                                    </span>
+                                                </div>
+                                                <span className="text-gray-500 text-xs">
+                                                    {req.startDate ? new Date(req.startDate).toLocaleDateString() : 'Unknown Date'}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                );
+                            })()}
                         </div>
                     </div>
                 </div>

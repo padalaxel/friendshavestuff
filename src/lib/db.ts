@@ -143,6 +143,19 @@ export const getRequestsForUser = cache(async (userId: string): Promise<BorrowRe
     return (data as DBRequest[]).map(toRequestModel);
 });
 
+export const getRequestsForItem = cache(async (itemId: string): Promise<BorrowRequest[]> => {
+    // Use Admin Client to bypass RLS so anyone can see the history (as requested)
+    const supabase = await createAdminClient();
+    const { data, error } = await supabase
+        .from('borrow_requests')
+        .select('*')
+        .eq('item_id', itemId)
+        .order('start_date', { ascending: false });
+
+    if (error) return [];
+    return (data as DBRequest[]).map(toRequestModel);
+});
+
 export async function createBorrowRequest(req: { itemId: string; requesterId: string; ownerId: string; startDate: string; endDate: string }) {
     const supabase = await createClient();
     const { data, error } = await supabase
