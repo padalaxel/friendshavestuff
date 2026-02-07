@@ -25,6 +25,8 @@ import CommentsSection from '@/components/comments-section';
 import { sendRequestNotification, sendCommentNotification, sendReplyNotification } from '@/lib/email';
 import { Metadata } from 'next';
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
     const { id } = await params;
     const item = await getItemById(id);
