@@ -359,7 +359,12 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
         'use server';
         if (!session) return;
 
-        await addComment(item!.id, session.id, text, parentId);
+        try {
+            await addComment(item!.id, session.id, text, parentId);
+        } catch (e) {
+            console.error("Failed to submit comment:", e);
+            return; // Exit if save failed
+        }
 
         // Notify owner
         if (owner && owner.email && owner.id !== session.id) {

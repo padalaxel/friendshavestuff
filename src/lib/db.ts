@@ -354,7 +354,10 @@ export async function addComment(itemId: string, userId: string, text: string, p
         .select()
         .single();
 
-    if (error) throw error;
+    if (error) {
+        console.error("Error adding comment:", error);
+        throw error;
+    }
     return data;
 }
 
