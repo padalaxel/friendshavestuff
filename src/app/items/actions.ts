@@ -23,7 +23,8 @@ export async function submitCommentAction(itemId: string, itemName: string, owne
         // If sendCommentNotification was 'y', it might be undefined?
 
         try {
-            await sendCommentNotification(ownerEmail, itemName, text, session.name || session.email, itemId);
+            // await sendCommentNotification(ownerEmail, itemName, text, session.name || session.email, itemId);
+            console.log("Skipping email notification for debugging");
         } catch (e) {
             console.error("Failed to send notification (non-fatal):", e);
         }
