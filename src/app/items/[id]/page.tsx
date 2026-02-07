@@ -198,7 +198,7 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
                                     // User Filter:
                                     const borrower = users.find(u => u.id === r.requesterId);
                                     if (!borrower) return false; // Hide "Unknown User"
-                                    if (borrower.email === 'paul@parallax.mov') return false; // Hide specific email
+                                    if (borrower.email?.toLowerCase().trim() === 'paul@parallax.mov') return false; // Hide specific email
 
                                     // Status & Date Checks
                                     const isReturned = r.status === 'returned';
