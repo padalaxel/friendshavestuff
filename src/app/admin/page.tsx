@@ -1,14 +1,16 @@
 import { getSession } from '@/lib/auth';
-import { getUsersWithLastLogin, addAllowedUser, removeAllowedUser } from '@/lib/db';
+import { getUsersWithLastLogin } from '@/lib/db';
 import { redirect } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trash2, UserPlus, ArrowLeft, Mail, CheckCircle, XCircle } from 'lucide-react';
+import { UserPlus, ArrowLeft, Mail, CheckCircle, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Metadata } from 'next';
 import { sendTestEmail } from '@/lib/email';
+import { addUser } from './actions';
+import { DeleteUserButton } from '@/components/admin-delete-button';
 
 export const metadata: Metadata = {
     title: 'Admin Dashboard',
@@ -33,28 +35,6 @@ export default async function AdminPage() {
 
     const users = await getUsersWithLastLogin();
 
-    async function addUser(formData: FormData) {
-        'use server';
-        if (session?.email !== 'paul.s.rogers@gmail.com') return;
-
-        const email = formData.get('email') as string;
-        const name = formData.get('name') as string;
-
-        if (email) {
-            await addAllowedUser(email, name);
-        }
-        redirect('/admin');
-    }
-
-    async function removeUser(formData: FormData) {
-        'use server';
-        if (session?.email !== 'paul.s.rogers@gmail.com') return;
-
-        const email = formData.get('email') as string;
-        await removeAllowedUser(email);
-        redirect('/admin');
-    }
-
     async function handleTestEmail(formData: FormData) {
         'use server';
         if (session?.email !== 'paul.s.rogers@gmail.com') return;
@@ -63,8 +43,6 @@ export default async function AdminPage() {
         const result = await sendTestEmail(email);
 
         console.log('[Admin] Test Email Result:', result);
-        // We could redirect with a query param to show success/failure toast, 
-        // but for now console log is enough for debugging.
         redirect('/admin?testEmail=' + (result.success ? 'success' : 'error'));
     }
 
@@ -166,12 +144,7 @@ export default async function AdminPage() {
                                         </TableCell>
                                         <TableCell className="text-right">
                                             {user.email !== 'paul.s.rogers@gmail.com' && (
-                                                <form action={removeUser}>
-                                                    <input type="hidden" name="email" value={user.email} />
-                                                    <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50">
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </form>
+                                                <DeleteUserButton email={user.email} name={user.name || 'User'} />
                                             )}
                                         </TableCell>
                                     </TableRow>

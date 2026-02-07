@@ -192,11 +192,11 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
                             <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">Borrowing History</h3>
                             {(() => {
                                 // Filter for past history, restricted to after Feb 5th 2026
-                                // AND filter out blacklisted emails (paul.s.rogers@gmail.com)
+                                // AND filter out blacklisted emails (paul@parallax.mov)
                                 const history = requestsForItem.filter(r => {
                                     // User Filter:
                                     const borrower = users.find(u => u.id === r.requesterId);
-                                    if (borrower?.email === 'paul.s.rogers@gmail.com') return false;
+                                    if (borrower?.email === 'paul@parallax.mov') return false;
 
                                     // Basic status checks
                                     const isReturned = r.status === 'returned';
