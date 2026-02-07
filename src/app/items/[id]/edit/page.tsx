@@ -9,6 +9,7 @@ import ImagePicker from '@/components/image-picker';
 import Link from 'next/link';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import { SubmitButton } from '@/components/submit-button';
+import BlackoutDatesPicker from '@/components/blackout-dates-picker';
 
 const CATEGORIES = [
     'Outdoors', 'Tools', 'Kitchen', 'Garden/Yard', 'Electronics',
@@ -36,6 +37,17 @@ export default async function EditItemPage({ params }: { params: { id: string } 
         const description = formData.get('description') as string;
         const category = formData.get('category') as string;
         const imageFile = formData.get('imageFile') as File;
+        const blackoutDatesJson = formData.get('blackoutDates') as string;
+        let blackoutDates: string[] = [];
+        try {
+            if (blackoutDatesJson) {
+                // The picker returns JSON string of array
+                const parsed = JSON.parse(blackoutDatesJson);
+                if (Array.isArray(parsed)) blackoutDates = parsed;
+            }
+        } catch (e) {
+            console.error("Failed to parse blackout dates", e);
+        }
 
         let imageUrl = item?.imageUrl; // Default to existing
         if (imageFile && imageFile.size > 0) {
@@ -47,7 +59,8 @@ export default async function EditItemPage({ params }: { params: { id: string } 
             name,
             description,
             category,
-            imageUrl
+            imageUrl,
+            blackoutDates
         }, session.isAdmin);
 
         redirect(`/items/${id}`);
@@ -102,6 +115,12 @@ export default async function EditItemPage({ params }: { params: { id: string } 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Change Photo (Optional)</label>
                                 <ImagePicker name="imageFile" initialPreview={item.imageUrl} />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Blackout Dates</label>
+                                <p className="text-xs text-gray-500">Select dates when this item is unavailable.</p>
+                                <BlackoutDatesPicker initialDates={item.blackoutDates || []} />
                             </div>
 
                             <div className="pt-4 flex gap-2">

@@ -12,10 +12,11 @@ import { DateRange } from 'react-day-picker';
 
 type ItemRequestFormProps = {
     bookings: BorrowRequest[];
+    blackoutDates?: string[];
     action: (formData: FormData) => Promise<void>;
 };
 
-export function ItemRequestForm({ bookings, action }: ItemRequestFormProps) {
+export function ItemRequestForm({ bookings, blackoutDates = [], action }: ItemRequestFormProps) {
     const [date, setDate] = useState<DateRange | undefined>();
     const [dateError, setDateError] = useState('');
 
@@ -29,6 +30,11 @@ export function ItemRequestForm({ bookings, action }: ItemRequestFormProps) {
             days.push(new Date(d));
         }
         return days;
+    });
+
+    // Add blackout dates to disabled days
+    blackoutDates.forEach(d => {
+        disabledDays.push(new Date(d));
     });
 
     const handleSelect = (range: DateRange | undefined) => {

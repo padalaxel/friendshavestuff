@@ -61,7 +61,7 @@ export default async function MyItemsPage() {
                         <span className="bg-amber-100 text-amber-800 p-2 rounded-lg mr-3">
                             <Loader2 className="h-5 w-5" />
                         </span>
-                        Items I'm Borrowing
+                        Items I&apos;m Borrowing
                     </h2>
 
                     {borrowedItems.length === 0 ? (
@@ -105,7 +105,7 @@ export default async function MyItemsPage() {
                                                 {req?.message && (
                                                     <div className="mt-3 text-sm bg-white p-2 rounded border border-amber-100 text-gray-700">
                                                         <span className="font-medium text-amber-800 text-xs uppercase tracking-wide block mb-1">Message from Owner</span>
-                                                        "{req.message}"
+                                                        &quot;{req.message}&quot;
                                                     </div>
                                                 )}
                                             </div>
@@ -143,7 +143,7 @@ export default async function MyItemsPage() {
 
                     {myItems.length === 0 ? (
                         <div className="text-center py-20 bg-white rounded-xl border border-dashed">
-                            <p className="text-gray-500 text-lg mb-4">You haven't listed any items yet.</p>
+                            <p className="text-gray-500 text-lg mb-4">You haven&apos;t listed any items yet.</p>
                             <Link href="/items/new">
                                 <Button variant="outline">List your first item</Button>
                             </Link>

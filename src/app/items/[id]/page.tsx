@@ -1,4 +1,4 @@
-import { getItemById, getUsers, createBorrowRequest, getRequestsForUser, getRequestsForItem, updateRequestStatus, BorrowRequest } from '@/lib/db';
+import { getItemById, getUsers, createBorrowRequest, getRequestsForUser, getRequestsForItem, updateRequestStatus, BorrowRequest, getComments, addComment } from '@/lib/db';
 import { sendRequestNotification } from '@/lib/email';
 import { getSession } from '@/lib/auth';
 import { redirect, notFound } from 'next/navigation';
@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 import { ItemRequestForm } from '@/components/item-request-form';
+import CommentsSection from '@/components/comments-section';
 import { Metadata } from 'next';
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
@@ -41,7 +42,6 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
     let activeRequest: BorrowRequest | undefined;
 
     const isOwner = session.id === item.ownerId;
-    const canEdit = isOwner || session.isAdmin;
 
     // Define these outside so they are available in render
     let approvedReq: BorrowRequest | undefined;
@@ -65,7 +65,17 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
     const itemRequests = ownerRequests.filter(r => r.itemId === item.id);
     const bookings = itemRequests.filter(r => r.status === 'approved');
 
+    // Fetch comments
+    const comments = await getComments(item.id);
+
     // --- Actions ---
+
+    async function submitComment(text: string) {
+        'use server';
+        if (!session) return;
+        await addComment(item!.id, session.id, text);
+        redirect(`/items/${item!.id}`);
+    }
 
     async function requestItem(formData: FormData) {
         'use server';
@@ -79,7 +89,6 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
 
         // Validation: Dates must be valid
         if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-            // ideally return error, but for MVP just redirect
             return redirect(`/items/${item.id}?error=Invalid Dates`);
         }
 
@@ -89,13 +98,11 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
         }
 
         // Validation: Overlap Check
-        // We need to re-fetch to be safe (concurrent requests), but using passed 'bookings' (if logic moved here) or re-querying DB is best.
-        // For this server action, we'll re-fetch just the requests for this item to check.
-        const currentItemRequests = await getRequestsForUser(item.ownerId); // Owner has all requests for their items
+        const currentItemRequests = await getRequestsForUser(item.ownerId);
         const activeBookings = currentItemRequests.filter(r =>
             r.itemId === item.id &&
             r.status === 'approved' &&
-            r.startDate // legacy check
+            r.startDate
         );
 
         const hasOverlap = activeBookings.some(booking => {
@@ -107,8 +114,14 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
             return start <= bookingEnd && end >= bookingStart;
         });
 
-        if (hasOverlap) {
-            return redirect(`/items/${item.id}?error=Dates are already booked`);
+        // Check against blackout dates
+        const hasBlackoutOverlap = item.blackoutDates?.some(d => {
+            const blackoutDate = new Date(d);
+            return blackoutDate >= start && blackoutDate <= end;
+        });
+
+        if (hasOverlap || hasBlackoutOverlap) {
+            return redirect(`/items/${item.id}?error=Dates are unavailable`);
         }
 
         await createBorrowRequest({
@@ -122,13 +135,9 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
 
         // Send notification
         console.log('--- [RequestItem] Debug Start ---');
-        console.log('Item Owner ID:', item.ownerId);
-        // ... logging code ...
-
         if (owner && owner.email) {
             console.log('[RequestItem] Sending email to:', owner.email);
-            const emailResult = await sendRequestNotification(owner.email, item.name, session.name || session.email, item.id, session.email, startDateStr, endDateStr);
-            console.log('[RequestItem] Email result:', emailResult);
+            await sendRequestNotification(owner.email, item.name, session.name || session.email, item.id, session.email, startDateStr, endDateStr);
         } else {
             console.error('[RequestItem] Owner not found or missing email. Notification SKIPPED.');
         }
@@ -249,8 +258,6 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
                                     ) : (
                                         !bookings.length && <p className="text-sm text-gray-500 italic">No pending requests.</p>
                                     )}
-
-                                    {/* History Link or Other info could go here */}
                                 </div>
                             ) : (
                                 <div className="space-y-4">
@@ -299,6 +306,7 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
                                             <CardContent className="p-4 pt-6">
                                                 <ItemRequestForm
                                                     bookings={bookings}
+                                                    blackoutDates={item.blackoutDates}
                                                     action={requestItem}
                                                 />
                                             </CardContent>
@@ -312,12 +320,19 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
                         <div className="pt-6 border-t">
                             <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">Borrowing History</h3>
                             {(() => {
-                                // Filter for past history
+                                // Filter for past history, restricted to after Feb 5th 2026
                                 const history = requestsForItem.filter(r => {
+                                    // Basic status checks
                                     const isReturned = r.status === 'returned';
                                     const isPast = r.endDate ? new Date(r.endDate) < new Date() : false;
-                                    // Show if returned OR (approved and past)
-                                    return isReturned || (r.status === 'approved' && isPast);
+                                    const isValidStatus = isReturned || (r.status === 'approved' && isPast);
+
+                                    // Date Constraint: Only show history from Feb 5th 2026 onwards
+                                    // Use startDate or updatedAt if startDate is missing (fallback)
+                                    const itemDate = r.startDate ? new Date(r.startDate) : new Date(r.updatedAt);
+                                    const cutoffDate = new Date('2026-02-05T00:00:00');
+
+                                    return isValidStatus && itemDate >= cutoffDate;
                                 });
 
                                 if (history.length === 0) {
@@ -345,6 +360,15 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
                                     </div>
                                 );
                             })()}
+                        </div>
+
+                        {/* Comments Section */}
+                        <div className="pt-6 border-t">
+                            <CommentsSection
+                                comments={comments}
+                                currentUser={session}
+                                onAddComment={submitComment}
+                            />
                         </div>
                     </div>
                 </div>

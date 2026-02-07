@@ -9,6 +9,7 @@ export type Item = {
     description?: string;
     category?: string;
     imageUrl?: string;
+    blackoutDates?: string[];
     createdAt: string;
 };
 
@@ -23,6 +24,15 @@ export type BorrowRequest = {
     message?: string;
     createdAt: string;
     updatedAt: string;
+};
+
+export type Comment = {
+    id: string;
+    itemId: string;
+    userId: string;
+    text: string;
+    createdAt: string;
+    user?: UserProfile;
 };
 
 // Update UserProfile type to include lastLogin
@@ -42,6 +52,7 @@ type DBItem = {
     description?: string;
     category?: string;
     image_url?: string;
+    blackout_dates?: string[];
     created_at: string;
 }
 
@@ -96,7 +107,8 @@ export async function createItem(item: { name: string; description?: string; cat
             description: item.description,
             category: item.category,
             image_url: item.imageUrl,
-            owner_id: item.ownerId
+            owner_id: item.ownerId,
+            blackout_dates: []
         }])
         .select()
         .single();
@@ -113,6 +125,7 @@ export async function updateItem(id: string, updates: Partial<Item>, asAdmin: bo
     if (updates.description) dbUpdates.description = updates.description;
     if (updates.category) dbUpdates.category = updates.category;
     if (updates.imageUrl) dbUpdates.image_url = updates.imageUrl;
+    if (updates.blackoutDates) dbUpdates.blackout_dates = updates.blackoutDates;
 
     const { data, error } = await supabase
         .from('items')
@@ -188,6 +201,13 @@ export async function updateRequestStatus(requestId: string, status: string, mes
     return toRequestModel(data as DBRequest);
 }
 
+type DBAllowedUser = {
+    user_id: string | null;
+    email: string;
+    name: string | null;
+    created_at?: string;
+}
+
 export const getUsers = cache(async (): Promise<UserProfile[]> => {
     // Legacy simple fetch, or we can just make this call the new one if we want consistent types
     // For now, let's leave it and replicate logical upgrade in a new function specific for Admin
@@ -195,7 +215,7 @@ export const getUsers = cache(async (): Promise<UserProfile[]> => {
     const { data: allowed } = await supabase.from('allowed_users').select('*');
     if (!allowed) return [];
 
-    return allowed.map((u: any) => ({
+    return (allowed as DBAllowedUser[]).map((u) => ({
         id: u.user_id || u.email,
         email: u.email,
         name: u.name || u.email,
@@ -223,8 +243,8 @@ export const getUsersWithLastLogin = cache(async (): Promise<UserProfile[]> => {
     }
 
     // 3. Merge Data
-    return allowed.map((u: any) => {
-        const authUser = authUsers?.find((au: any) => au.email === u.email);
+    return (allowed as DBAllowedUser[]).map((u) => {
+        const authUser = authUsers?.find((au) => au.email === u.email);
         return {
             id: u.user_id || u.email,
             email: u.email,
@@ -269,8 +289,52 @@ function toItemModel(dbItem: DBItem): Item {
         description: dbItem.description,
         category: dbItem.category,
         imageUrl: dbItem.image_url,
+        blackoutDates: dbItem.blackout_dates || [],
         createdAt: dbItem.created_at
     };
+}
+
+// --- Comments ---
+export async function getComments(itemId: string): Promise<Comment[]> {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('comments')
+        .select('*')
+        .eq('item_id', itemId)
+        .order('created_at', { ascending: true });
+
+    if (error || !data) return [];
+
+    // Retrieve user details for each comment
+    // In a real app we'd use a join, but here we can just map or fetch
+    // optimize: fetch unique userIDs first
+    const userIds = [...new Set(data.map((c: any) => c.user_id))];
+    const { data: usersData } = await supabase.from('allowed_users').select('*').in('user_id', userIds); // assuming allowed_users has user_id
+
+    // Fallback if allowed_users doesn't have user_id populated or matching
+    // We can just use the user_id as name if not found, or use the existing getUsers cache
+    const allUsers = await getUsers();
+
+    return data.map((c: any) => ({
+        id: c.id,
+        itemId: c.item_id,
+        userId: c.user_id,
+        text: c.text,
+        createdAt: c.created_at,
+        user: allUsers.find(u => u.id === c.user_id)
+    }));
+}
+
+export async function addComment(itemId: string, userId: string, text: string) {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('comments')
+        .insert([{ item_id: itemId, user_id: userId, text }])
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
 }
 
 function toRequestModel(dbReq: DBRequest): BorrowRequest {
@@ -279,7 +343,7 @@ function toRequestModel(dbReq: DBRequest): BorrowRequest {
         itemId: dbReq.item_id,
         requesterId: dbReq.requester_id,
         ownerId: dbReq.owner_id,
-        status: dbReq.status as any,
+        status: dbReq.status as BorrowRequest['status'],
         startDate: dbReq.start_date,
         endDate: dbReq.end_date,
         message: dbReq.message,
