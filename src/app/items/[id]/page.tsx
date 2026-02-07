@@ -1,5 +1,5 @@
 import { getItemById, getUsers, createBorrowRequest, getRequestsForUser, getRequestsForItem, updateRequestStatus, BorrowRequest, getComments, addComment } from '@/lib/db';
-import { sendRequestNotification } from '@/lib/email';
+import { sendRequestNotification, sendCommentNotification } from '@/lib/email';
 import { getSession } from '@/lib/auth';
 import { redirect, notFound } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
@@ -73,7 +73,22 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
     async function submitComment(text: string) {
         'use server';
         if (!session) return;
+
         await addComment(item!.id, session.id, text);
+
+        // Send email notification to owner if they exist and it's not their own comment
+        if (owner && owner.email && owner.id !== session.id) {
+            console.log(`[SubmitComment] Sending notification to owner: ${owner.email}`);
+            await sendCommentNotification(
+                owner.email,
+                item!.name,
+                text,
+                session.name || session.email,
+                item!.id,
+                session.email
+            );
+        }
+
         redirect(`/items/${item!.id}`);
     }
 
@@ -161,8 +176,9 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
                 </Link>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Image Col */}
-                    <div className="space-y-4">
+                    {/* LEFT COLUMN: Image + Borrowing History */}
+                    <div className="space-y-8">
+                        {/* Image */}
                         <div className="w-full rounded-xl overflow-hidden bg-gray-50 shadow-sm border min-h-[200px] md:min-h-[300px] flex items-center justify-center">
                             <img
                                 src={item.imageUrl || "https://placehold.co/800x600?text=No+Image"}
@@ -170,9 +186,60 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
                                 className="object-contain w-full h-auto max-h-[40vh] md:max-h-[70vh]"
                             />
                         </div>
+
+                        {/* Borrowing History (Moved Here) */}
+                        <div className="pt-6 border-t">
+                            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">Borrowing History</h3>
+                            {(() => {
+                                // Filter for past history, restricted to after Feb 5th 2026
+                                // AND filter out blacklisted emails (paul.s.rogers@gmail.com)
+                                const history = requestsForItem.filter(r => {
+                                    // User Filter:
+                                    const borrower = users.find(u => u.id === r.requesterId);
+                                    if (borrower?.email === 'paul.s.rogers@gmail.com') return false;
+
+                                    // Basic status checks
+                                    const isReturned = r.status === 'returned';
+                                    const isPast = r.endDate ? new Date(r.endDate) < new Date() : false;
+                                    const isValidStatus = isReturned || (r.status === 'approved' && isPast);
+
+                                    // Date Constraint: Only show history from Feb 5th 2026 onwards
+                                    // Use startDate or updatedAt if startDate is missing (fallback)
+                                    const itemDate = r.startDate ? new Date(r.startDate) : new Date(r.updatedAt);
+                                    const cutoffDate = new Date('2026-02-05T00:00:00');
+
+                                    return isValidStatus && itemDate >= cutoffDate;
+                                });
+
+                                if (history.length === 0) {
+                                    return <p className="text-sm text-gray-500 italic">No previous borrowing history.</p>;
+                                }
+
+                                return (
+                                    <div className="space-y-3">
+                                        {history.map(req => (
+                                            <div key={req.id} className="flex items-center justify-between text-sm bg-gray-50 p-2 rounded">
+                                                <div className="flex items-center gap-2">
+                                                    <Avatar className="h-6 w-6">
+                                                        <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${users.find(u => u.id === req.requesterId)?.email}`} />
+                                                        <AvatarFallback>?</AvatarFallback>
+                                                    </Avatar>
+                                                    <span className="font-medium text-gray-700">
+                                                        {users.find(u => u.id === req.requesterId)?.name || 'Unknown User'}
+                                                    </span>
+                                                </div>
+                                                <span className="text-gray-500 text-xs">
+                                                    {req.startDate ? new Date(req.startDate).toLocaleDateString() : 'Unknown Date'}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                );
+                            })()}
+                        </div>
                     </div>
 
-                    {/* Info Col */}
+                    {/* RIGHT COLUMN: Info + Controls + Comments */}
                     <div className="space-y-6">
                         <div>
                             <Badge variant="secondary" className="mb-2">{item.category || 'General'}</Badge>
@@ -314,52 +381,6 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
                                     )}
                                 </div>
                             )}
-                        </div>
-
-                        {/* Borrowing History Section */}
-                        <div className="pt-6 border-t">
-                            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">Borrowing History</h3>
-                            {(() => {
-                                // Filter for past history, restricted to after Feb 5th 2026
-                                const history = requestsForItem.filter(r => {
-                                    // Basic status checks
-                                    const isReturned = r.status === 'returned';
-                                    const isPast = r.endDate ? new Date(r.endDate) < new Date() : false;
-                                    const isValidStatus = isReturned || (r.status === 'approved' && isPast);
-
-                                    // Date Constraint: Only show history from Feb 5th 2026 onwards
-                                    // Use startDate or updatedAt if startDate is missing (fallback)
-                                    const itemDate = r.startDate ? new Date(r.startDate) : new Date(r.updatedAt);
-                                    const cutoffDate = new Date('2026-02-05T00:00:00');
-
-                                    return isValidStatus && itemDate >= cutoffDate;
-                                });
-
-                                if (history.length === 0) {
-                                    return <p className="text-sm text-gray-500 italic">No previous borrowing history.</p>;
-                                }
-
-                                return (
-                                    <div className="space-y-3">
-                                        {history.map(req => (
-                                            <div key={req.id} className="flex items-center justify-between text-sm bg-gray-50 p-2 rounded">
-                                                <div className="flex items-center gap-2">
-                                                    <Avatar className="h-6 w-6">
-                                                        <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${users.find(u => u.id === req.requesterId)?.email}`} />
-                                                        <AvatarFallback>?</AvatarFallback>
-                                                    </Avatar>
-                                                    <span className="font-medium text-gray-700">
-                                                        {users.find(u => u.id === req.requesterId)?.name || 'Unknown User'}
-                                                    </span>
-                                                </div>
-                                                <span className="text-gray-500 text-xs">
-                                                    {req.startDate ? new Date(req.startDate).toLocaleDateString() : 'Unknown Date'}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                );
-                            })()}
                         </div>
 
                         {/* Comments Section */}

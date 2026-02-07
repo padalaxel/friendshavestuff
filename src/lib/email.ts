@@ -178,3 +178,51 @@ export async function sendTestEmail(toEmail: string) {
         return { success: false, error: err };
     }
 }
+
+export async function sendCommentNotification(toEmail: string, itemName: string, commentText: string, commenterName: string, itemId: string, replyToEmail?: string) {
+    const resend = getResendClient();
+    const apiKey = process.env.RESEND_API_KEY;
+    const appUrl = getAppUrl();
+    const itemUrl = `${appUrl}/items/${itemId}`;
+
+    if (!apiKey || apiKey === 're_123') {
+        console.log(`[MOCK EMAIL] Comment Notification - To: ${toEmail}, Item: ${itemName}, Commenter: ${commenterName}, Text: "${commentText}"`);
+        return { success: true };
+    }
+
+    try {
+        const { data, error } = await resend.emails.send({
+            from: 'FriendsHaveStuff <hello@friendshavestuff.com>',
+            to: [toEmail],
+            replyTo: replyToEmail,
+            subject: `New Comment on: ${itemName}`,
+            html: `
+                <div>
+                    <h2>New Comment</h2>
+                    <p><strong>${commenterName}</strong> commented on your item <strong><a href="${itemUrl}">${itemName}</a></strong>:</p>
+                    
+                    <div style="background-color: #f3f4f6; padding: 15px; border-left: 4px solid #2563eb; margin: 20px 0;">
+                        "${commentText}"
+                    </div>
+
+                    <p>Replying to this message will email <strong>${commenterName}</strong> directly.</p>
+
+                    <p>
+                        <a href="${itemUrl}" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                            View Comment
+                        </a>
+                    </p>
+                </div>
+            `
+        });
+
+        if (error) {
+            console.error('Error sending comment email:', error);
+            return { success: false, error };
+        }
+        return { success: true, data };
+    } catch (err) {
+        console.error('Exception sending comment notification:', err);
+        return { success: false, error: err };
+    }
+}
