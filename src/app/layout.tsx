@@ -18,6 +18,9 @@ export const metadata: Metadata = {
     default: 'FriendsHaveStuff',
   },
   description: "Share gear with your friends and community.",
+  icons: {
+    icon: '/icon.png',
+  },
 };
 
 import { Header } from "@/components/header";

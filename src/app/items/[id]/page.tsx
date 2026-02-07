@@ -191,24 +191,26 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
                         <div className="pt-6 border-t">
                             <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">Borrowing History</h3>
                             {(() => {
-                                // Filter for past history, restricted to after Feb 5th 2026
-                                // AND filter out blacklisted emails (paul@parallax.mov)
+                                // Filter for past history:
+                                // 1. Remove orphaned requests (where user is missing)
+                                // 2. Remove future requests (endDate > now)
                                 const history = requestsForItem.filter(r => {
                                     // User Filter:
                                     const borrower = users.find(u => u.id === r.requesterId);
-                                    if (borrower?.email === 'paul@parallax.mov') return false;
+                                    if (!borrower) return false; // Hide "Unknown User"
+                                    if (borrower.email === 'paul@parallax.mov') return false; // Hide specific email
 
-                                    // Basic status checks
+                                    // Status & Date Checks
                                     const isReturned = r.status === 'returned';
-                                    const isPast = r.endDate ? new Date(r.endDate) < new Date() : false;
-                                    const isValidStatus = isReturned || (r.status === 'approved' && isPast);
+                                    const now = new Date();
+                                    // Consider "Past" if endDate is before now. 
+                                    // If no endDate, fall back to startDate (e.g. 1 day rental).
+                                    const endDate = r.endDate ? new Date(r.endDate) : (r.startDate ? new Date(r.startDate) : null);
 
-                                    // Date Constraint: Only show history from Feb 5th 2026 onwards
-                                    // Use startDate or updatedAt if startDate is missing (fallback)
-                                    const itemDate = r.startDate ? new Date(r.startDate) : new Date(r.updatedAt);
-                                    const cutoffDate = new Date('2026-02-05T00:00:00');
+                                    const isPast = endDate ? endDate < now : false;
 
-                                    return isValidStatus && itemDate >= cutoffDate;
+                                    // Only show if it's a returned item OR an approved item that is in the past
+                                    return isReturned || (r.status === 'approved' && isPast);
                                 });
 
                                 if (history.length === 0) {
