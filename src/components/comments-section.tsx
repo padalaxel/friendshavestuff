@@ -32,8 +32,11 @@ export default function CommentsSection({ comments: initialComments, currentUser
     const topLevelComments = comments.filter(c => !c.parentId);
     const getReplies = (parentId: string) => comments.filter(c => c.parentId === parentId);
 
+    const [error, setError] = useState<string | null>(null);
+
     const handleSubmit = async (e: React.FormEvent, parentId?: string) => {
         e.preventDefault();
+        setError(null); // Clear previous errors
         const textToSubmit = parentId ? replyText : newComment;
         if (!textToSubmit.trim() || !currentUser) return;
 
@@ -60,9 +63,10 @@ export default function CommentsSection({ comments: initialComments, currentUser
 
         try {
             await onAddComment(textToSubmit, parentId);
-        } catch (error) {
-            console.error("Failed to post comment", error);
+        } catch (err: any) {
+            console.error("Failed to post comment", err);
             setComments(prev => prev.filter(c => c.id !== tempId));
+            setError(err.message || 'Failed to post comment. Please try again.');
         } finally {
             setIsSubmitting(false);
         }
