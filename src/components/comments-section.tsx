@@ -5,83 +5,164 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { formatDistanceToNow } from 'date-fns';
-import { Send } from 'lucide-react';
+import { Send, Trash2 } from 'lucide-react';
 import { Comment, UserProfile } from '@/lib/db';
 
 type CommentsSectionProps = {
     comments: Comment[];
     currentUser?: UserProfile | null;
-    onAddComment: (text: string) => Promise<void>;
+    onAddComment: (text: string, parentId?: string) => Promise<void>;
+    onDeleteComment: (commentId: string) => Promise<void>;
 };
 
-export default function CommentsSection({ comments: initialComments, currentUser, onAddComment }: CommentsSectionProps) {
+export default function CommentsSection({ comments: initialComments, currentUser, onAddComment, onDeleteComment }: CommentsSectionProps) {
     const [comments, setComments] = useState(initialComments);
     const [newComment, setNewComment] = useState('');
+    const [replyingTo, setReplyingTo] = useState<string | null>(null);
+    const [replyText, setReplyText] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    // Group comments
+    const topLevelComments = comments.filter(c => !c.parentId);
+    const getReplies = (parentId: string) => comments.filter(c => c.parentId === parentId);
+
+    const handleSubmit = async (e: React.FormEvent, parentId?: string) => {
         e.preventDefault();
-        if (!newComment.trim() || !currentUser) return;
+        const textToSubmit = parentId ? replyText : newComment;
+        if (!textToSubmit.trim() || !currentUser) return;
 
         setIsSubmitting(true);
 
-        // Optimistic update
         const tempId = Math.random().toString();
         const optimisticComment: Comment = {
             id: tempId,
             itemId: 'temp',
             userId: currentUser.id,
-            text: newComment,
+            text: textToSubmit,
             createdAt: new Date().toISOString(),
-            user: currentUser
+            user: currentUser,
+            parentId
         };
 
         setComments(prev => [...prev, optimisticComment]);
-        setNewComment('');
+        if (parentId) {
+            setReplyText('');
+            setReplyingTo(null);
+        } else {
+            setNewComment('');
+        }
 
         try {
-            await onAddComment(optimisticComment.text);
-            // In a real app we'd replace the temp comment with the real one from the server response,
-            // but for now relying on revalidation or just keeping the optimistic one is "okay" for MVP
-            // better: onAddComment returns the real comment
+            await onAddComment(textToSubmit, parentId);
         } catch (error) {
             console.error("Failed to post comment", error);
-            // Rollback
             setComments(prev => prev.filter(c => c.id !== tempId));
         } finally {
             setIsSubmitting(false);
         }
     };
 
+    const handleDelete = async (commentId: string) => {
+        if (!confirm("Are you sure you want to delete this comment?")) return;
+
+        setIsDeleting(commentId);
+        // Optimistic delete
+        const previousComments = [...comments];
+        setComments(prev => prev.filter(c => c.id !== commentId && c.parentId !== commentId)); // Delete comment and its replies
+
+        try {
+            await onDeleteComment(commentId);
+        } catch (error) {
+            console.error("Failed to delete comment", error);
+            setComments(previousComments);
+        } finally {
+            setIsDeleting(null);
+        }
+    };
+
+    const renderComment = (comment: Comment, isReply = false) => (
+        <div key={comment.id} className={`flex gap-3 ${isReply ? 'ml-11 mt-3' : 'mt-4'}`}>
+            <Avatar className="h-8 w-8">
+                <AvatarImage src={comment.user?.avatarUrl} />
+                <AvatarFallback>{comment.user?.name?.[0] || '?'}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+                <div className="bg-gray-50 p-3 rounded-lg">
+                    <div className="flex justify-between items-baseline mb-1">
+                        <span className="font-semibold text-sm text-gray-900">{comment.user?.name || 'Unknown User'}</span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-500">{formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}</span>
+                            {currentUser && currentUser.id === comment.userId && (
+                                <button
+                                    onClick={() => handleDelete(comment.id)}
+                                    className="text-gray-400 hover:text-red-600 transition-colors"
+                                    disabled={isDeleting === comment.id}
+                                    title="Delete Comment"
+                                >
+                                    <Trash2 className="h-3 w-3" />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{comment.text}</p>
+                </div>
+
+                {/* Actions Row */}
+                <div className="flex items-center gap-4 mt-1 ml-1">
+                    {currentUser && !isReply && (
+                        <button
+                            onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+                            className="text-xs font-medium text-gray-500 hover:text-gray-900"
+                        >
+                            Reply
+                        </button>
+                    )}
+                </div>
+
+                {/* Reply Form */}
+                {replyingTo === comment.id && (
+                    <form onSubmit={(e) => handleSubmit(e, comment.id)} className="mt-3 flex gap-3">
+                        <Avatar className="h-6 w-6">
+                            <AvatarImage src={currentUser?.avatarUrl} />
+                            <AvatarFallback>{currentUser?.name?.[0]}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 flex gap-2">
+                            <Textarea
+                                value={replyText}
+                                onChange={(e) => setReplyText(e.target.value)}
+                                placeholder="Write a reply..."
+                                className="min-h-[40px] h-[40px] py-2 text-sm"
+                                autoFocus
+                            />
+                            <Button size="sm" type="submit" disabled={!replyText.trim() || isSubmitting}>
+                                {isSubmitting ? '...' : 'Reply'}
+                            </Button>
+                        </div>
+                    </form>
+                )}
+
+                {/* Nested Replies */}
+                {!isReply && getReplies(comment.id).map(reply => renderComment(reply, true))}
+            </div>
+        </div>
+    );
+
     return (
         <div className="space-y-6">
             <h3 className="text-lg font-semibold text-gray-900">Comments & Questions ({comments.length})</h3>
 
             {/* List */}
-            <div className="space-y-4">
+            <div className="">
                 {comments.length === 0 && (
                     <p className="text-gray-500 text-sm italic">No comments yet. Be the first to ask about this item.</p>
                 )}
-                {comments.map((comment) => (
-                    <div key={comment.id} className="flex gap-3">
-                        <Avatar className="h-8 w-8">
-                            <AvatarImage src={comment.user?.avatarUrl} />
-                            <AvatarFallback>{comment.user?.name?.[0] || '?'}</AvatarFallback>
-                        </Avatar>
-                        <div className="bg-gray-50 p-3 rounded-lg flex-1">
-                            <div className="flex justify-between items-baseline mb-1">
-                                <span className="font-semibold text-sm text-gray-900">{comment.user?.name || 'Unknown User'}</span>
-                                <span className="text-xs text-gray-500">{formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}</span>
-                            </div>
-                            <p className="text-sm text-gray-700 whitespace-pre-wrap">{comment.text}</p>
-                        </div>
-                    </div>
-                ))}
+                {topLevelComments.map(comment => renderComment(comment))}
             </div>
 
-            {/* Form */}
+            {/* Main Form */}
             {currentUser ? (
-                <form onSubmit={handleSubmit} className="flex gap-3 items-start mt-6">
+                <form onSubmit={(e) => handleSubmit(e)} className="flex gap-3 items-start mt-8 pt-6 border-t">
                     <Avatar className="h-8 w-8">
                         <AvatarImage src={currentUser.avatarUrl} />
                         <AvatarFallback>{currentUser.name?.[0]}</AvatarFallback>
@@ -96,13 +177,13 @@ export default function CommentsSection({ comments: initialComments, currentUser
                         <div className="flex justify-end">
                             <Button size="sm" type="submit" disabled={!newComment.trim() || isSubmitting}>
                                 <Send className="h-3 w-3 mr-2" />
-                                Post Comment
+                                {isSubmitting ? 'Posting...' : 'Post Comment'}
                             </Button>
                         </div>
                     </div>
                 </form>
             ) : (
-                <div className="bg-gray-50 p-4 rounded text-center text-sm text-gray-500">
+                <div className="bg-gray-50 p-4 rounded text-center text-sm text-gray-500 mt-6">
                     Please log in to leave a comment.
                 </div>
             )}

@@ -33,6 +33,7 @@ export type Comment = {
     text: string;
     createdAt: string;
     user?: UserProfile;
+    parentId?: string;
 };
 
 // Update UserProfile type to include lastLogin
@@ -316,6 +317,7 @@ type DBComment = {
     user_id: string;
     text: string;
     created_at: string;
+    parent_id?: string;
 }
 
 // --- Comments ---
@@ -339,20 +341,31 @@ export async function getComments(itemId: string): Promise<Comment[]> {
         userId: c.user_id,
         text: c.text,
         createdAt: c.created_at,
+        parentId: c.parent_id,
         user: allUsers.find(u => u.id === c.user_id)
     }));
 }
 
-export async function addComment(itemId: string, userId: string, text: string) {
+export async function addComment(itemId: string, userId: string, text: string, parentId?: string) {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('comments')
-        .insert([{ item_id: itemId, user_id: userId, text }])
+        .insert([{ item_id: itemId, user_id: userId, text, parent_id: parentId }])
         .select()
         .single();
 
     if (error) throw error;
     return data;
+}
+
+export async function deleteComment(commentId: string) {
+    const supabase = await createClient();
+    const { error } = await supabase
+        .from('comments')
+        .delete()
+        .eq('id', commentId);
+
+    if (error) throw error;
 }
 
 function toRequestModel(dbReq: DBRequest): BorrowRequest {

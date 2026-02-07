@@ -222,7 +222,53 @@ export async function sendCommentNotification(toEmail: string, itemName: string,
         }
         return { success: true, data };
     } catch (err) {
-        console.error('Exception sending comment notification:', err);
+        return { success: false, error: err };
+    }
+}
+
+export async function sendReplyNotification(toEmail: string, itemName: string, replyText: string, replierName: string, itemId: string) {
+    const resend = getResendClient();
+    const apiKey = process.env.RESEND_API_KEY;
+    const appUrl = getAppUrl();
+    const itemUrl = `${appUrl}/items/${itemId}`;
+
+    if (!apiKey || apiKey === 're_123') {
+        console.log(`[MOCK EMAIL] Reply Notification - To: ${toEmail}, Item: ${itemName}, Replier: ${replierName}, Text: "${replyText}"`);
+        return { success: true };
+    }
+
+    try {
+        const { data, error } = await resend.emails.send({
+            from: 'FriendsHaveStuff <hello@friendshavestuff.com>',
+            to: [toEmail],
+            subject: `New Reply on: ${itemName}`,
+            html: `
+                <div>
+                    <h2>New Reply</h2>
+                    <p><strong>${replierName}</strong> replied to your comment on <strong><a href="${itemUrl}">${itemName}</a></strong>:</p>
+                    
+                    <div style="background-color: #f3f4f6; padding: 15px; border-left: 4px solid #2563eb; margin: 20px 0;">
+                        "${replyText}"
+                    </div>
+
+                    <p>Replying to this message will email <strong>${replierName}</strong> directly.</p>
+
+                    <p>
+                        <a href="${itemUrl}" style="background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                            View Conversation
+                        </a>
+                    </p>
+                </div>
+            `
+        });
+
+        if (error) {
+            console.error('Error sending reply email:', error);
+            return { success: false, error };
+        }
+        return { success: true, data };
+    } catch (err) {
+        console.error('Exception sending reply notification:', err);
         return { success: false, error: err };
     }
 }
