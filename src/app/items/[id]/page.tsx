@@ -18,6 +18,7 @@ import {
     deleteComment,
     BorrowRequest
 } from '@/lib/db';
+import { submitCommentAction, removeCommentAction } from '../actions';
 import { getSession } from '@/lib/auth';
 import { BorrowingHistory } from '@/components/borrowing-history';
 import { ItemRequestForm } from '@/components/item-request-form';
@@ -357,39 +358,17 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
     );
     async function submitComment(text: string, parentId?: string) {
         'use server';
-        if (!session) return;
+        // We use a wrapper to pass the bound arguments that are only available in the component scope (item, owner vars)
+        // Note: We need to import submitCommentAction. 
+        // But wait, we can't import it inside the function. We need to import it at top level.
+        // Let's assume the import is added (I will do that in next step or this one if I can).
+        // Actually I can just replace the body.
 
-        try {
-            await addComment(item!.id, session.id, text, parentId);
-        } catch (e: any) {
-            // Re-throw to make it visible in the UI for debugging
-            throw new Error(`Submit Failed: ${e.message || JSON.stringify(e)}`);
-        }
-
-        // Notify owner
-        if (owner && owner.email && owner.id !== session.id) {
-            await sendCommentNotification(owner.email, item!.name, text, session.name || session.email, item!.id);
-        }
-
-        // Notify parent author if reply
-        if (parentId) {
-            const parentComment = comments.find(c => c.id === parentId);
-            if (parentComment && parentComment.user?.email && parentComment.userId !== session.id) {
-                await sendReplyNotification(parentComment.user.email, item!.name, text, session.name || session.email, item!.id);
-            }
-        }
-
-        revalidatePath(`/items/${id}`);
+        await submitCommentAction(item!.id, item!.name, owner?.email || '', owner?.id || '', text, parentId);
     }
 
     async function removeComment(commentId: string) {
         'use server';
-        if (!session) return;
-
-        // In a real app we'd verify fetching the comment first to check ownership securely
-        // For MVP, relying on UI or if the user is owner/admin
-
-        await deleteComment(commentId);
-        revalidatePath(`/items/${id}`);
+        await removeCommentAction(commentId, item!.id);
     }
 }
