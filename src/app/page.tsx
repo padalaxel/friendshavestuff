@@ -210,33 +210,35 @@ export default async function Home(props: {
                   const owner = users.find(u => u.id === item.ownerId);
                   return (
                     <Link key={item.id} href={`/items/${item.id}`} className="block group">
-                      <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 h-full flex flex-col">
-                        <div className="aspect-[4/3] relative w-full bg-gray-100 overflow-hidden">
-                          <img
-                            src={item.imageUrl || "https://placehold.co/600x400?text=No+Image"}
-                            alt={item.name}
-                            className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
-                          />
-                        </div>
-                        <CardHeader className="p-2 sm:p-4 pb-0 sm:pb-2 flex-grow">
-                          <div className="flex justify-between items-start">
-                            <CardTitle className="text-sm sm:text-lg truncate leading-tight" title={item.name}>{item.name}</CardTitle>
+                      <div id={`item-${item.id}`} className="h-full">
+                        <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-200 h-full flex flex-col">
+                          <div className="aspect-[4/3] relative w-full bg-gray-100 overflow-hidden">
+                            <img
+                              src={item.imageUrl || "https://placehold.co/600x400?text=No+Image"}
+                              alt={item.name}
+                              className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+                            />
                           </div>
-                          <p className="text-xs sm:text-sm text-gray-500 line-clamp-2 mt-1">{item.description}</p>
-                        </CardHeader>
-                        <CardFooter className="p-2 sm:p-4 pt-2 flex items-center justify-between border-t mt-2 bg-gray-50/50 hidden sm:flex">
-                          <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600">
-                            <Avatar className="h-5 w-5 sm:h-6 sm:w-6 ring-2 ring-white">
-                              <AvatarImage src={owner?.avatarUrl} />
-                              <AvatarFallback>?</AvatarFallback>
-                            </Avatar>
-                            <span className="truncate max-w-[60px] sm:max-w-none">{owner?.name.split(' ')[0]}</span>
-                          </div>
-                          <Badge variant="secondary" className="text-[10px] sm:text-xs px-2 py-0.5 font-normal bg-white border-gray-200">
-                            {item.category || 'General'}
-                          </Badge>
-                        </CardFooter>
-                      </Card>
+                          <CardHeader className="p-2 sm:p-4 pb-0 sm:pb-2 flex-grow">
+                            <div className="flex justify-between items-start">
+                              <CardTitle className="text-sm sm:text-lg truncate leading-tight" title={item.name}>{item.name}</CardTitle>
+                            </div>
+                            <p className="text-xs sm:text-sm text-gray-500 line-clamp-2 mt-1">{item.description}</p>
+                          </CardHeader>
+                          <CardFooter className="p-2 sm:p-4 pt-2 flex items-center justify-between border-t mt-2 bg-gray-50/50 hidden sm:flex">
+                            <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-600">
+                              <Avatar className="h-5 w-5 sm:h-6 sm:w-6 ring-2 ring-white">
+                                <AvatarImage src={owner?.avatarUrl} />
+                                <AvatarFallback>?</AvatarFallback>
+                              </Avatar>
+                              <span className="truncate max-w-[60px] sm:max-w-none">{owner?.name.split(' ')[0]}</span>
+                            </div>
+                            <Badge variant="secondary" className="text-[10px] sm:text-xs px-2 py-0.5 font-normal bg-white border-gray-200">
+                              {item.category || 'General'}
+                            </Badge>
+                          </CardFooter>
+                        </Card>
+                      </div>
                     </Link>
                   );
                 })}
