@@ -161,6 +161,12 @@ export default function CommentsSection({ comments: initialComments, currentUser
         <div className="space-y-6">
             <h3 className="text-lg font-semibold text-gray-900">Comments & Questions ({comments.length})</h3>
 
+            {error && (
+                <div className="bg-red-50 text-red-600 p-3 rounded-md border border-red-200 text-sm">
+                    <strong>Error:</strong> {error}
+                </div>
+            )}
+
             {/* List */}
             <div className="">
                 {comments.length === 0 && (
