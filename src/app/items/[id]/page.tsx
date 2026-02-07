@@ -361,9 +361,9 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
 
         try {
             await addComment(item!.id, session.id, text, parentId);
-        } catch (e) {
-            console.error("Failed to submit comment:", e);
-            return; // Exit if save failed
+        } catch (e: any) {
+            // Re-throw to make it visible in the UI for debugging
+            throw new Error(`Submit Failed: ${e.message || JSON.stringify(e)}`);
         }
 
         // Notify owner
