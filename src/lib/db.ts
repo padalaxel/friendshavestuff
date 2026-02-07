@@ -342,8 +342,6 @@ export async function getComments(itemId: string): Promise<Comment[]> {
         user: allUsers.find(u => u.id === c.user_id)
     }));
 }
-    }));
-}
 
 export async function addComment(itemId: string, userId: string, text: string) {
     const supabase = await createClient();
