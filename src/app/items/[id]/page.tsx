@@ -339,18 +339,18 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
                         {/* Borrowing History (Mobile) */}
                         <BorrowingHistory requests={requestsForItem} users={users} className="md:hidden mt-8" />
 
-                        {/* Comments Section */}
-                        <div className="pt-6 border-t">
+                        {/* Comments Section - Disabled for now due to minification issues */}
+                        {/* <div className="pt-6 border-t">
                             <div className="text-xs text-gray-400 mb-2 p-2 bg-gray-100 rounded">
                                 Debug: {comments.length} comments loaded from DB. Item ID: {item.id}
                             </div>
-                            <CommentsSection
-                                comments={comments}
+                            <CommentsSection 
+                                comments={comments} 
                                 currentUser={session}
                                 onAddComment={submitComment}
                                 onDeleteComment={removeComment}
                             />
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </div>
