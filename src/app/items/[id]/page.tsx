@@ -195,7 +195,11 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
                     {/* RIGHT COLUMN: Info + Controls + Comments */}
                     <div className="space-y-6">
                         <div>
-                            <Badge variant="secondary" className="mb-2">{item.category || 'General'}</Badge>
+                            <Link href={`/?category=${encodeURIComponent(item.category || 'General')}`}>
+                                <Badge variant="secondary" className="mb-2 hover:bg-gray-200 transition-colors cursor-pointer">
+                                    {item.category || 'General'}
+                                </Badge>
+                            </Link>
                             <h1 className="text-3xl font-bold text-gray-900">{item.name}</h1>
                             <p className="text-sm text-gray-500 mt-1">
                                 Owned by <Link href={`/users/${item.ownerId}`} className="text-inherit hover:text-inherit no-underline">{owner?.name || 'Unknown'}</Link>
