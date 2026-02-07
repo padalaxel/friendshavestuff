@@ -340,6 +340,9 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
 
                         {/* Comments Section */}
                         <div className="pt-6 border-t">
+                            <div className="text-xs text-gray-400 mb-2 p-2 bg-gray-100 rounded">
+                                Debug: {comments.length} comments loaded from DB. Item ID: {item.id}
+                            </div>
                             <CommentsSection
                                 comments={comments}
                                 currentUser={session}
