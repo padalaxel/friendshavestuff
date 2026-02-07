@@ -86,6 +86,22 @@ export const getItems = cache(async (): Promise<Item[]> => {
     return (data as DBItem[]).map(toItemModel);
 });
 
+export const getItemsByOwner = cache(async (ownerId: string): Promise<Item[]> => {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+        .from('items')
+        .select('*')
+        .eq('owner_id', ownerId)
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('Error fetching owner items:', error);
+        return [];
+    }
+
+    return (data as DBItem[]).map(toItemModel);
+});
+
 export const getItemById = cache(async (id: string): Promise<Item | null> => {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -294,6 +310,14 @@ function toItemModel(dbItem: DBItem): Item {
     };
 }
 
+type DBComment = {
+    id: string;
+    item_id: string;
+    user_id: string;
+    text: string;
+    created_at: string;
+}
+
 // --- Comments ---
 export async function getComments(itemId: string): Promise<Comment[]> {
     const supabase = await createClient();
@@ -306,22 +330,18 @@ export async function getComments(itemId: string): Promise<Comment[]> {
     if (error || !data) return [];
 
     // Retrieve user details for each comment
-    // In a real app we'd use a join, but here we can just map or fetch
-    // optimize: fetch unique userIDs first
-    const userIds = [...new Set(data.map((c: any) => c.user_id))];
-    const { data: usersData } = await supabase.from('allowed_users').select('*').in('user_id', userIds); // assuming allowed_users has user_id
-
-    // Fallback if allowed_users doesn't have user_id populated or matching
-    // We can just use the user_id as name if not found, or use the existing getUsers cache
+    // We use the existing getUsers cache
     const allUsers = await getUsers();
 
-    return data.map((c: any) => ({
+    return (data as DBComment[]).map((c) => ({
         id: c.id,
         itemId: c.item_id,
         userId: c.user_id,
         text: c.text,
         createdAt: c.created_at,
         user: allUsers.find(u => u.id === c.user_id)
+    }));
+}
     }));
 }
 

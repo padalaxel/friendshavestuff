@@ -246,11 +246,12 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
                         <div>
                             <Badge variant="secondary" className="mb-2">{item.category || 'General'}</Badge>
                             <h1 className="text-3xl font-bold text-gray-900">{item.name}</h1>
-                            <p className="text-sm text-gray-500 mt-1">Owned by {owner?.name || 'Unknown'}</p>
+                            <p className="text-sm text-gray-500 mt-1">
+                                Owned by <Link href={`/users/${item.ownerId}`} className="text-inherit hover:text-inherit no-underline">{owner?.name || 'Unknown'}</Link>
+                            </p>
                         </div>
 
                         <div className="prose prose-sm text-gray-600">
-                            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Description</h3>
                             <p>{item.description || "No description provided."}</p>
                         </div>
 
