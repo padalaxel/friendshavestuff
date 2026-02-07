@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -17,6 +17,11 @@ type CommentsSectionProps = {
 
 export default function CommentsSection({ comments: initialComments, currentUser, onAddComment, onDeleteComment }: CommentsSectionProps) {
     const [comments, setComments] = useState(initialComments);
+
+    useEffect(() => {
+        setComments(initialComments);
+    }, [initialComments]);
+
     const [newComment, setNewComment] = useState('');
     const [replyingTo, setReplyingTo] = useState<string | null>(null);
     const [replyText, setReplyText] = useState('');
