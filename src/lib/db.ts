@@ -347,8 +347,7 @@ export async function getComments(itemId: string): Promise<Comment[]> {
 }
 
 export async function addComment(itemId: string, userId: string, text: string, parentId?: string) {
-    // Use Admin Client to bypass strict RLS checks for insertion
-    const supabase = await createAdminClient();
+    const supabase = await createClient();
     const { data, error } = await supabase
         .from('comments')
         .insert([{ item_id: itemId, user_id: userId, text, parent_id: parentId }])
