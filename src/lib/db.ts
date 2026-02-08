@@ -332,17 +332,16 @@ export async function getComments(itemId: string): Promise<Comment[]> {
     if (error || !data) return [];
 
     // Retrieve user details for each comment
-    // We use the existing getUsers cache
     const allUsers = await getUsers();
 
-    return (data as DBComment[]).map((c) => ({
+    return (data as any[]).map((c) => ({
         id: c.id,
         itemId: c.item_id,
-        userId: c.user_id,
-        text: c.text,
+        userId: c.author_user_id, // Mapped from new schema
+        text: c.body,             // Mapped from new schema
         createdAt: c.created_at,
-        parentId: c.parent_id,
-        user: allUsers.find(u => u.id === c.user_id)
+        parentId: c.parent_comment_id, // Mapped from new schema
+        user: allUsers.find(u => u.id === c.author_user_id)
     }));
 }
 
@@ -350,7 +349,12 @@ export async function addComment(itemId: string, userId: string, text: string, p
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('comments')
-        .insert([{ item_id: itemId, user_id: userId, text, parent_id: parentId }])
+        .insert([{
+            item_id: itemId,
+            author_user_id: userId,
+            body: text,
+            parent_comment_id: parentId
+        }])
         .select()
         .single();
 
@@ -358,7 +362,16 @@ export async function addComment(itemId: string, userId: string, text: string, p
         console.error("Error adding comment:", error);
         throw error;
     }
-    return data;
+
+    // Return mapped model
+    return {
+        id: data.id,
+        itemId: data.item_id,
+        userId: data.author_user_id,
+        text: data.body,
+        createdAt: data.created_at,
+        parentId: data.parent_comment_id
+    };
 }
 
 export async function deleteComment(commentId: string) {

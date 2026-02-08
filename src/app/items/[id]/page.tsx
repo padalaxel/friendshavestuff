@@ -18,7 +18,7 @@ import {
     deleteComment,
     BorrowRequest
 } from '@/lib/db';
-import { submitCommentAction, removeCommentAction } from '../actions';
+// import { submitCommentAction, removeCommentAction } from '../actions';
 import { getSession } from '@/lib/auth';
 import { BorrowingHistory } from '@/components/borrowing-history';
 import { ItemRequestForm } from '@/components/item-request-form';
@@ -339,36 +339,18 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
                         {/* Borrowing History (Mobile) */}
                         <BorrowingHistory requests={requestsForItem} users={users} className="md:hidden mt-8" />
 
-                        {/* Comments Section - Disabled for now due to minification issues */}
-                        {/* <div className="pt-6 border-t">
-                            <div className="text-xs text-gray-400 mb-2 p-2 bg-gray-100 rounded">
-                                Debug: {comments.length} comments loaded from DB. Item ID: {item.id}
-                            </div>
-                            <CommentsSection 
-                                comments={comments} 
+
+                        {/* Comments Section */}
+                        <div className="pt-6 border-t">
+                            <CommentsSection
+                                itemId={item.id}
+                                comments={comments}
                                 currentUser={session}
-                                onAddComment={submitComment}
-                                onDeleteComment={removeComment}
                             />
-                        </div> */}
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     );
-    async function submitComment(text: string, parentId?: string) {
-        'use server';
-        // We use a wrapper to pass the bound arguments that are only available in the component scope (item, owner vars)
-        // Note: We need to import submitCommentAction. 
-        // But wait, we can't import it inside the function. We need to import it at top level.
-        // Let's assume the import is added (I will do that in next step or this one if I can).
-        // Actually I can just replace the body.
-
-        await submitCommentAction(item!.id, item!.name, owner?.email || '', owner?.id || '', text, parentId);
-    }
-
-    async function removeComment(commentId: string) {
-        'use server';
-        await removeCommentAction(commentId, item!.id);
-    }
 }

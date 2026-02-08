@@ -7,15 +7,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { formatDistanceToNow } from 'date-fns';
 import { Send, Trash2 } from 'lucide-react';
 import { Comment, UserProfile } from '@/lib/db';
+import { useRouter } from 'next/navigation';
 
 type CommentsSectionProps = {
+    itemId: string;
     comments: Comment[];
     currentUser?: UserProfile | null;
-    onAddComment: (text: string, parentId?: string) => Promise<void>;
-    onDeleteComment: (commentId: string) => Promise<void>;
 };
 
-export default function CommentsSection({ comments: initialComments, currentUser, onAddComment, onDeleteComment }: CommentsSectionProps) {
+export default function CommentsSection({ itemId, comments: initialComments, currentUser }: CommentsSectionProps) {
+    const router = useRouter();
     const [comments, setComments] = useState(initialComments);
 
     useEffect(() => {
@@ -45,7 +46,7 @@ export default function CommentsSection({ comments: initialComments, currentUser
         const tempId = Math.random().toString();
         const optimisticComment: Comment = {
             id: tempId,
-            itemId: 'temp',
+            itemId: itemId,
             userId: currentUser.id,
             text: textToSubmit,
             createdAt: new Date().toISOString(),
@@ -62,7 +63,20 @@ export default function CommentsSection({ comments: initialComments, currentUser
         }
 
         try {
-            await onAddComment(textToSubmit, parentId);
+            const res = await fetch('/api/comments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ itemId, text: textToSubmit, parentId })
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Failed to post comment');
+            }
+
+            // Refresh the route to get updated data
+            router.refresh();
+
         } catch (err: any) {
             console.error("Failed to post comment", err);
             setComments(prev => prev.filter(c => c.id !== tempId));
@@ -81,7 +95,17 @@ export default function CommentsSection({ comments: initialComments, currentUser
         setComments(prev => prev.filter(c => c.id !== commentId && c.parentId !== commentId)); // Delete comment and its replies
 
         try {
-            await onDeleteComment(commentId);
+            const res = await fetch(`/api/comments?id=${commentId}&itemId=${itemId}`, {
+                method: 'DELETE'
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Failed to delete comment');
+            }
+
+            router.refresh();
+
         } catch (error) {
             console.error("Failed to delete comment", error);
             setComments(previousComments);
@@ -159,7 +183,9 @@ export default function CommentsSection({ comments: initialComments, currentUser
 
     return (
         <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900">Comments & Questions ({comments.length})</h3>
+            <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-900">Comments & Questions ({comments.length})</h3>
+            </div>
 
             {error && (
                 <div className="bg-red-50 text-red-600 p-3 rounded-md border border-red-200 text-sm">
