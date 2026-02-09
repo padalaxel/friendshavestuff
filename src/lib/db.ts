@@ -9,6 +9,7 @@ export type Item = {
     description?: string;
     category?: string;
     imageUrl?: string;
+    imageUrls?: string[];
     blackoutDates?: string[];
     createdAt: string;
 };
@@ -53,6 +54,7 @@ type DBItem = {
     description?: string;
     category?: string;
     image_url?: string;
+    image_urls?: string[];
     blackout_dates?: string[];
     created_at: string;
 }
@@ -115,7 +117,7 @@ export const getItemById = cache(async (id: string): Promise<Item | null> => {
     return toItemModel(data as DBItem);
 });
 
-export async function createItem(item: { name: string; description?: string; category?: string; sub_category?: string; imageUrl?: string; ownerId: string }) {
+export async function createItem(item: { name: string; description?: string; category?: string; sub_category?: string; imageUrl?: string; imageUrls?: string[]; ownerId: string }) {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('items')
@@ -123,7 +125,8 @@ export async function createItem(item: { name: string; description?: string; cat
             name: item.name,
             description: item.description,
             category: item.category,
-            image_url: item.imageUrl,
+            image_url: item.imageUrls?.[0] || item.imageUrl, // Fallback for legacy
+            image_urls: item.imageUrls,
             owner_id: item.ownerId,
             blackout_dates: []
         }])
@@ -142,6 +145,7 @@ export async function updateItem(id: string, updates: Partial<Item>, asAdmin: bo
     if (updates.description) dbUpdates.description = updates.description;
     if (updates.category) dbUpdates.category = updates.category;
     if (updates.imageUrl) dbUpdates.image_url = updates.imageUrl;
+    if (updates.imageUrls) dbUpdates.image_urls = updates.imageUrls;
     if (updates.blackoutDates) dbUpdates.blackout_dates = updates.blackoutDates;
 
     const { data, error } = await supabase
@@ -305,7 +309,8 @@ function toItemModel(dbItem: DBItem): Item {
         name: dbItem.name,
         description: dbItem.description,
         category: dbItem.category,
-        imageUrl: dbItem.image_url,
+        imageUrl: dbItem.image_urls?.[0] || dbItem.image_url, // Prefer array, fallback to legacy
+        imageUrls: dbItem.image_urls || (dbItem.image_url ? [dbItem.image_url] : []),
         blackoutDates: dbItem.blackout_dates || [],
         createdAt: dbItem.created_at
     };

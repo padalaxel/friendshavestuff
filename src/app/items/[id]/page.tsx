@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import Link from 'next/link';
 import { ArrowLeft, Calendar as CalendarIcon, CheckCircle, Clock, Info, MapPin, Share2, Shield, Star, RefreshCw, XCircle, Edit } from 'lucide-react';
 import { format } from 'date-fns';
+import { ImageCarousel } from '@/components/image-carousel';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -175,11 +176,11 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
                     {/* LEFT COLUMN: Image + Borrowing History */}
                     <div className="space-y-8">
                         {/* Image */}
-                        <div className="w-full rounded-xl overflow-hidden bg-gray-50 shadow-sm border min-h-[200px] md:min-h-[300px] flex items-center justify-center">
-                            <img
-                                src={item.imageUrl || "https://placehold.co/800x600?text=No+Image"}
+                        <div className="w-full rounded-xl overflow-hidden bg-gray-50 shadow-sm border min-h-[200px] md:min-h-[300px] flex items-center justify-center relative">
+                            <ImageCarousel
+                                images={item.imageUrls && item.imageUrls.length > 0 ? item.imageUrls : [item.imageUrl || "https://placehold.co/800x600?text=No+Image"]}
                                 alt={item.name}
-                                className="object-contain w-full h-auto max-h-[40vh] md:max-h-[70vh]"
+                                className="w-full h-full flex items-center justify-center"
                             />
                         </div>
 

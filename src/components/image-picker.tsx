@@ -11,47 +11,81 @@ interface ImagePickerProps {
 }
 
 export default function ImagePicker({ name, initialPreview }: ImagePickerProps) {
-    const [preview, setPreview] = useState<string | null>(initialPreview || null);
+    // We'll treat initialPreview as a single string for now, but valid state can hold multiple
+    const [images, setImages] = useState<{ id: string; url: string; file?: File }[]>(
+        initialPreview ? [{ id: 'init-1', url: initialPreview }] : []
+    );
     const [isCompressing, setIsCompressing] = useState(false);
+
+    // We use a container to hold multiple inputs or just manage one data transfer
+    // For simple form submission with name="imageFile", multiple inputs with same name works best
+    // or one input with multiple attribute. 
+    // Let's use DataTransfer object to sync with a single hidden input.
     const realInputRef = useRef<HTMLInputElement>(null);
 
     async function handleFileSelect(e: ChangeEvent<HTMLInputElement>) {
-        const file = e.target.files?.[0];
-        if (!file) return;
+        const selectedFiles = Array.from(e.target.files || []);
+        if (selectedFiles.length === 0) return;
 
-        // Reset
+        if (images.length + selectedFiles.length > 3) {
+            alert("You can only add up to 3 images.");
+            return;
+        }
+
         setIsCompressing(true);
 
         try {
-            // Compress Image
-            const compressedFile = await compressImage(file);
+            const newImages: { id: string; url: string; file: File }[] = [];
 
-            // Set the compressed file into the REAL hidden input
-            if (realInputRef.current) {
-                const dt = new DataTransfer();
-                dt.items.add(compressedFile);
-                realInputRef.current.files = dt.files;
+            for (const file of selectedFiles) {
+                const compressedFile = await compressImage(file);
+                newImages.push({
+                    id: Math.random().toString(36).substr(2, 9),
+                    url: URL.createObjectURL(compressedFile),
+                    file: compressedFile
+                });
             }
 
-            // Create preview URL
-            const url = URL.createObjectURL(compressedFile);
-            setPreview(url);
+            const updatedImages = [...images, ...newImages];
+            setImages(updatedImages);
+            updateHiddenInput(updatedImages);
 
         } catch (err) {
             console.error("Compression failed", err);
-            alert("Failed to process image. Please try another one.");
+            alert("Failed to process one or more images.");
         } finally {
             setIsCompressing(false);
+            // Reset the picker input so same file can be selected again if needed
+            e.target.value = '';
         }
     }
 
-    function clearImage() {
-        setPreview(null);
-        if (realInputRef.current) realInputRef.current.value = '';
+    function removeImage(idToRemove: string) {
+        const updatedImages = images.filter(img => img.id !== idToRemove);
+        setImages(updatedImages);
+        updateHiddenInput(updatedImages);
+
+        // Revoke URL if it was created by us (checked by file existence)
+        const removed = images.find(img => img.id === idToRemove);
+        if (removed?.file) {
+            URL.revokeObjectURL(removed.url);
+        }
+    }
+
+    function updateHiddenInput(currentImages: { id: string; url: string; file?: File }[]) {
+        if (!realInputRef.current) return;
+
+        const dt = new DataTransfer();
+        currentImages.forEach(img => {
+            if (img.file) {
+                dt.items.add(img.file);
+            }
+        });
+        realInputRef.current.files = dt.files;
     }
 
     return (
-        <div className="space-y-3">
+        <div className="space-y-4">
             {/* The Real Input (Hidden) that gets submitted */}
             <input
                 type="file"
@@ -59,76 +93,61 @@ export default function ImagePicker({ name, initialPreview }: ImagePickerProps) 
                 ref={realInputRef}
                 className="hidden"
                 accept="image/*"
+                multiple
             />
 
-            {/* The Preview / Selection Area */}
-            {!preview ? (
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors">
-                    <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        id={`picker-${name}`}
-                        onChange={handleFileSelect}
-                        disabled={isCompressing}
-                    />
-                    <label
-                        htmlFor={`picker-${name}`}
-                        className="cursor-pointer flex flex-col items-center justify-center gap-2"
-                    >
-                        {isCompressing ? (
-                            <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
-                        ) : (
-                            <ImagePlus className="h-8 w-8 text-gray-400" />
-                        )}
-                        <span className="text-sm font-medium text-gray-600">
-                            {isCompressing ? 'Compressing...' : 'Tap to add photo'}
-                        </span>
-                        <span className="text-xs text-gray-400">
-                            Max 5MB (Auto-resized)
-                        </span>
-                    </label>
-                </div>
-            ) : (
-                <div className="relative rounded-lg overflow-hidden border border-gray-200 bg-gray-50 group">
-                    <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        id={`picker-${name}-replace`}
-                        onChange={handleFileSelect}
-                        disabled={isCompressing}
-                    />
-                    <label
-                        htmlFor={`picker-${name}-replace`}
-                        className="block aspect-video relative cursor-pointer"
-                    >
-                        {/* We use standard img for blob preview validity */}
+            {/* Image Grid */}
+            <div className="grid grid-cols-3 gap-4">
+                {images.map((img) => (
+                    <div key={img.id} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 bg-gray-50 group">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                            src={preview}
+                            src={img.url}
                             alt="Preview"
-                            className="w-full h-full object-cover transition-opacity group-hover:opacity-90"
+                            className="w-full h-full object-cover"
                         />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                            <span className="opacity-0 group-hover:opacity-100 bg-black/50 text-white text-xs px-2 py-1 rounded-full pointer-events-none">
-                                Tap to replace
+                        <button
+                            type="button"
+                            onClick={() => removeImage(img.id)}
+                            className="absolute top-1 right-1 p-1 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors opacity-0 group-hover:opacity-100"
+                        >
+                            <X className="h-3 w-3" />
+                        </button>
+                    </div>
+                ))}
+
+                {/* Add Button */}
+                {images.length < 3 && (
+                    <div className="aspect-square border-2 border-dashed border-gray-300 rounded-lg hover:bg-gray-50 transition-colors relative">
+                        <input
+                            type="file"
+                            accept="image/*"
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                            onChange={handleFileSelect}
+                            disabled={isCompressing}
+                            multiple
+                            title={isCompressing ? "Compressing..." : "Add image"}
+                        />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none p-2 text-center">
+                            {isCompressing ? (
+                                <Loader2 className="h-6 w-6 text-blue-500 animate-spin" />
+                            ) : (
+                                <ImagePlus className="h-6 w-6 text-gray-400" />
+                            )}
+                            <span className="text-xs font-medium text-gray-600">
+                                {isCompressing ? '...' : 'Add Photo'}
+                            </span>
+                            <span className="text-[10px] text-gray-400">
+                                {3 - images.length} remaining
                             </span>
                         </div>
-                    </label>
-
-                    <button
-                        type="button"
-                        onClick={clearImage}
-                        className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors z-10"
-                    >
-                        <X className="h-4 w-4" />
-                    </button>
-                    <div className="absolute bottom-2 left-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded pointer-events-none">
-                        Ready to upload
                     </div>
-                </div>
-            )}
+                )}
+            </div>
+
+            <p className="text-xs text-gray-500">
+                Add up to 3 photos. First one will be the cover.
+            </p>
         </div>
     );
 }

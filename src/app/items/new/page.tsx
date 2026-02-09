@@ -31,12 +31,22 @@ export default async function AddItemPage() {
         const name = formData.get('name') as string;
         const description = formData.get('description') as string;
         const category = formData.get('category') as string;
-        const imageFile = formData.get('imageFile') as File;
 
-        let imageUrl = "https://placehold.co/600x400?text=Item"; // Default
-        if (imageFile && imageFile.size > 0) {
-            const uploadedUrl = await uploadItemImage(imageFile);
-            if (uploadedUrl) imageUrl = uploadedUrl;
+        // Handle multiple images
+        const imageFiles = formData.getAll('imageFile') as File[];
+        const imageUrls: string[] = [];
+
+        // Upload all valid images
+        for (const file of imageFiles) {
+            if (file && file.size > 0) {
+                const uploadedUrl = await uploadItemImage(file);
+                if (uploadedUrl) imageUrls.push(uploadedUrl);
+            }
+        }
+
+        // Default image if none uploaded
+        if (imageUrls.length === 0) {
+            imageUrls.push("https://placehold.co/600x400?text=Item");
         }
 
         await createItem({
@@ -44,7 +54,8 @@ export default async function AddItemPage() {
             name,
             description,
             category,
-            imageUrl,
+            imageUrls, // Pass array
+            imageUrl: imageUrls[0], // Pass first as main (though db.ts handles fallback)
         });
 
         redirect('/');
@@ -93,7 +104,7 @@ export default async function AddItemPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Photo</label>
+                                <label className="text-sm font-medium">Photos</label>
                                 <ImagePicker name="imageFile" />
                             </div>
 
