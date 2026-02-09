@@ -7,13 +7,13 @@ import Image from 'next/image';
 
 interface ImagePickerProps {
     name: string;
-    initialPreview?: string | null;
+    initialImages?: string[];
 }
 
-export default function ImagePicker({ name, initialPreview }: ImagePickerProps) {
+export default function ImagePicker({ name, initialImages = [] }: ImagePickerProps) {
     // We'll treat initialPreview as a single string for now, but valid state can hold multiple
-    const [images, setImages] = useState<{ id: string; url: string; file?: File }[]>(
-        initialPreview ? [{ id: 'init-1', url: initialPreview }] : []
+    const [images, setImages] = useState<{ id: string; url: string; file?: File; isExisting?: boolean }[]>(
+        initialImages ? initialImages.map((url, idx) => ({ id: `init-${idx}`, url, isExisting: true })) : []
     );
     const [isCompressing, setIsCompressing] = useState(false);
 
@@ -35,7 +35,7 @@ export default function ImagePicker({ name, initialPreview }: ImagePickerProps) 
         setIsCompressing(true);
 
         try {
-            const newImages: { id: string; url: string; file: File }[] = [];
+            const newImages: { id: string; url: string; file: File; isExisting?: boolean }[] = [];
 
             for (const file of selectedFiles) {
                 const compressedFile = await compressImage(file);
@@ -72,7 +72,7 @@ export default function ImagePicker({ name, initialPreview }: ImagePickerProps) 
         }
     }
 
-    function updateHiddenInput(currentImages: { id: string; url: string; file?: File }[]) {
+    function updateHiddenInput(currentImages: { id: string; url: string; file?: File; isExisting?: boolean }[]) {
         if (!realInputRef.current) return;
 
         const dt = new DataTransfer();
@@ -86,7 +86,7 @@ export default function ImagePicker({ name, initialPreview }: ImagePickerProps) 
 
     return (
         <div className="space-y-4">
-            {/* The Real Input (Hidden) that gets submitted */}
+            {/* The Real Input (Hidden) that gets submitted for NEW files */}
             <input
                 type="file"
                 name={name}
@@ -95,6 +95,11 @@ export default function ImagePicker({ name, initialPreview }: ImagePickerProps) 
                 accept="image/*"
                 multiple
             />
+
+            {/* Hidden inputs for EXISTING images that should be kept */}
+            {images.filter(img => img.isExisting).map(img => (
+                <input key={img.id} type="hidden" name="existingImageUrls" value={img.url} />
+            ))}
 
             {/* Image Grid */}
             <div className="grid grid-cols-3 gap-4">

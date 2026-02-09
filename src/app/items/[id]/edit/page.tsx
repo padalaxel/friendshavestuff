@@ -50,17 +50,35 @@ export default async function EditItemPage({ params }: { params: { id: string } 
             console.error("Failed to parse blackout dates", e);
         }
 
-        let imageUrl = item?.imageUrl; // Default to existing
-        if (imageFile && imageFile.size > 0) {
-            const uploadedUrl = await uploadItemImage(imageFile);
-            if (uploadedUrl) imageUrl = uploadedUrl;
+        // Handle existing images (from hidden inputs)
+        const existingImageUrls = formData.getAll('existingImageUrls') as string[];
+
+        // Handle new images
+        const imageFiles = formData.getAll('imageFile') as File[];
+        const newImageUrls: string[] = [];
+
+        for (const file of imageFiles) {
+            if (file && file.size > 0) {
+                const uploadedUrl = await uploadItemImage(file);
+                if (uploadedUrl) newImageUrls.push(uploadedUrl);
+            }
         }
+
+        // Combine existing and new
+        const finalImageUrls = [...existingImageUrls, ...newImageUrls];
+
+        // Fallback if somehow empty and we want to keep at least one placeholder? 
+        // Or if user deleted everything, maybe that's intended? 
+        // Let's assume if empty, we might revert to placeholder or just have no images.
+        // Current logic in db.ts handles empty array by creating one if legacy field exists, 
+        // but here we are explicit.
 
         await updateItem(id, {
             name,
             description,
             category,
-            imageUrl,
+            imageUrls: finalImageUrls,
+            imageUrl: finalImageUrls[0] || undefined, // Update legacy column match
             blackoutDates
         }, session.isAdmin);
 
@@ -120,8 +138,8 @@ export default async function EditItemPage({ params }: { params: { id: string } 
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Change Photo (Optional)</label>
-                                <ImagePicker name="imageFile" initialPreview={item.imageUrl} />
+                                <label className="text-sm font-medium">Photos</label>
+                                <ImagePicker name="imageFile" initialImages={item.imageUrls && item.imageUrls.length > 0 ? item.imageUrls : (item.imageUrl ? [item.imageUrl] : [])} />
                             </div>
 
                             <div className="space-y-2">
