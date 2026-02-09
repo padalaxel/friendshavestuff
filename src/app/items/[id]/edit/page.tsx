@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import { SubmitButton } from '@/components/submit-button';
 import BlackoutDatesPicker from '@/components/blackout-dates-picker';
+import AutosizeTextarea from '@/components/autosize-textarea';
 
 const CATEGORIES = [
     'Outdoors', 'Tools', 'Kitchen', 'Garden/Yard', 'Electronics',
@@ -109,7 +110,13 @@ export default async function EditItemPage({ params }: { params: { id: string } 
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Description</label>
-                                <Input name="description" defaultValue={item.description} />
+                                <AutosizeTextarea
+                                    name="description"
+                                    defaultValue={item.description}
+                                    minRows={3}
+                                    maxRows={10}
+                                    className="flex w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-950 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
+                                />
                             </div>
 
                             <div className="space-y-2">
