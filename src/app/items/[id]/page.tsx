@@ -203,7 +203,7 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
                         </div>
 
                         <div className="prose prose-sm text-gray-600">
-                            <p>{item.description || "No description provided."}</p>
+                            <p className="whitespace-pre-wrap">{item.description || "No description provided."}</p>
                         </div>
 
                         <div className="pt-6 border-t">
