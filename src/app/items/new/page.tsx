@@ -2,6 +2,7 @@ import { createItem } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { uploadItemImage } from '@/lib/storage';
 import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,6 +59,7 @@ export default async function AddItemPage() {
             imageUrl: imageUrls[0], // Pass first as main (though db.ts handles fallback)
         });
 
+        revalidatePath('/');
         redirect('/');
     }
 

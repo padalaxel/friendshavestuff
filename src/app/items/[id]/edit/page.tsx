@@ -2,6 +2,7 @@ import { getItemById, updateItem, deleteItem } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { uploadItemImage } from '@/lib/storage';
 import { redirect, notFound } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -82,6 +83,7 @@ export default async function EditItemPage({ params }: { params: { id: string } 
             blackoutDates
         }, session.isAdmin);
 
+        revalidatePath(`/items/${id}`);
         redirect(`/items/${id}`);
     }
 
