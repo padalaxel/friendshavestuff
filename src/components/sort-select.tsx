@@ -14,11 +14,18 @@ export function SortSelect() {
     const pathname = usePathname();
     const { replace } = useRouter();
 
-    const currentSort = searchParams.get('sort') || 'date';
+    const params = new URLSearchParams(searchParams);
+    const category = params.get('category');
+    // Default sort: 'alpha' if category is selected, otherwise 'date'
+    const defaultSort = category ? 'alpha' : 'date';
+    const currentSort = searchParams.get('sort') || defaultSort;
 
     const handleSortChange = (value: string) => {
         const params = new URLSearchParams(searchParams);
-        if (value && value !== 'date') {
+        const category = params.get('category');
+        const defaultSort = category ? 'alpha' : 'date';
+
+        if (value && value !== defaultSort) {
             params.set('sort', value);
         } else {
             params.delete('sort');

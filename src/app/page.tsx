@@ -47,7 +47,9 @@ export default async function Home(props: {
   const query = searchParams?.q?.toLowerCase() || '';
   const categoryFilter = searchParams?.category;
   const view = searchParams?.view || 'grid';
-  const sort = searchParams?.sort || 'date';
+  // Default sort: 'alpha' if category is selected, otherwise 'date'
+  const defaultSort = categoryFilter ? 'alpha' : 'date';
+  const sort = searchParams?.sort || defaultSort;
   const isListView = view === 'list';
 
   const filteredItems = allItems.filter((item) => {
@@ -63,7 +65,7 @@ export default async function Home(props: {
     if (sort === 'alpha') {
       return a.name.localeCompare(b.name);
     } else {
-      // Default: Date (Newest first)
+      // Date (Newest first)
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     }
   });
