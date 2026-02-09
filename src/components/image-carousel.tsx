@@ -46,7 +46,7 @@ export function ImageCarousel({ images, alt, className }: ImageCarouselProps) {
                     {/* Left Arrow */}
                     <button
                         onClick={prevImage}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none backdrop-blur-sm"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full transition-all focus:opacity-100 focus:outline-none backdrop-blur-sm md:opacity-0 md:group-hover:opacity-100"
                         aria-label="Previous image"
                     >
                         <ChevronLeft className="h-6 w-6" />
@@ -55,7 +55,7 @@ export function ImageCarousel({ images, alt, className }: ImageCarouselProps) {
                     {/* Right Arrow */}
                     <button
                         onClick={nextImage}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none backdrop-blur-sm"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full transition-all focus:opacity-100 focus:outline-none backdrop-blur-sm md:opacity-0 md:group-hover:opacity-100"
                         aria-label="Next image"
                     >
                         <ChevronRight className="h-6 w-6" />
