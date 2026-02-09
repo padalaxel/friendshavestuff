@@ -9,7 +9,7 @@ import ImagePicker from '@/components/image-picker';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { SubmitButton } from '@/components/submit-button';
-import TextareaAutosize from 'react-textarea-autosize';
+import AutosizeTextarea from '@/components/autosize-textarea';
 
 const CATEGORIES = [
     'Outdoors', 'Tools', 'Kitchen', 'Garden/Yard', 'Electronics',
@@ -83,7 +83,7 @@ export default async function AddItemPage() {
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Description</label>
-                                <TextareaAutosize
+                                <AutosizeTextarea
                                     name="description"
                                     placeholder="Brief details..."
                                     minRows={3}
