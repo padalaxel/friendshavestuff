@@ -95,6 +95,7 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
 
         const startDateStr = formData.get('startDate') as string;
         const endDateStr = formData.get('endDate') as string;
+        const message = formData.get('message') as string;
 
         const start = new Date(startDateStr);
         const end = new Date(endDateStr);
@@ -141,7 +142,8 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
             requesterId: session.id,
             ownerId: item.ownerId,
             startDate: startDateStr,
-            endDate: endDateStr
+            endDate: endDateStr,
+            message: message || undefined
         });
 
 
@@ -149,7 +151,7 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
         console.log('--- [RequestItem] Debug Start ---');
         if (owner && owner.email) {
             console.log('[RequestItem] Sending email to:', owner.email);
-            await sendRequestNotification(owner.email, item.name, session.name || session.email, item.id, session.email, startDateStr, endDateStr);
+            await sendRequestNotification(owner.email, item.name, session.name || session.email, item.id, session.email, startDateStr, endDateStr, message);
         } else {
             console.error('[RequestItem] Owner not found or missing email. Notification SKIPPED.');
         }
@@ -265,6 +267,13 @@ export default async function ItemDetailPage({ params }: { params: { id: string 
                                                 <div className="text-xs text-blue-700 mb-2">
                                                     Requested for: {pendingReq.startDate ? `${new Date(pendingReq.startDate).toLocaleDateString()} - ${new Date(pendingReq.endDate || pendingReq.startDate).toLocaleDateString()}` : 'Unspecified dates'}
                                                 </div>
+
+                                                {pendingReq.message && (
+                                                    <div className="bg-white p-3 rounded-md text-sm text-gray-700 border border-blue-100 mb-3">
+                                                        <span className="font-semibold text-xs text-gray-500 block mb-1">Message:</span>
+                                                        {pendingReq.message}
+                                                    </div>
+                                                )}
 
                                                 <div className="flex gap-2">
                                                     <form action={updateStatus.bind(null, pendingReq.id, 'approved')} className="flex-1">

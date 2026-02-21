@@ -190,7 +190,7 @@ export const getRequestsForItem = cache(async (itemId: string): Promise<BorrowRe
     return (data as DBRequest[]).map(toRequestModel);
 });
 
-export async function createBorrowRequest(req: { itemId: string; requesterId: string; ownerId: string; startDate: string; endDate: string }) {
+export async function createBorrowRequest(req: { itemId: string; requesterId: string; ownerId: string; startDate: string; endDate: string; message?: string }) {
     const supabase = await createClient();
     const { data, error } = await supabase
         .from('borrow_requests')
@@ -200,6 +200,7 @@ export async function createBorrowRequest(req: { itemId: string; requesterId: st
             owner_id: req.ownerId,
             start_date: req.startDate,
             end_date: req.endDate,
+            message: req.message,
             status: 'pending'
         }])
         .select()

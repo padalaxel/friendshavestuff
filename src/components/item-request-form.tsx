@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Send, Calendar as CalendarIcon } from 'lucide-react';
 import { BorrowRequest } from '@/lib/db';
@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { DateRange } from 'react-day-picker';
+import { Textarea } from '@/components/ui/textarea';
 
 type ItemRequestFormProps = {
     bookings: BorrowRequest[];
@@ -105,6 +106,15 @@ export function ItemRequestForm({ bookings, blackoutDates = [], action }: ItemRe
                 {dateError && (
                     <p className="text-sm text-red-600 font-medium">{dateError}</p>
                 )}
+            </div>
+
+            <div className="flex flex-col gap-2">
+                <Textarea
+                    name="message"
+                    placeholder="Add a message to the owner (optional)"
+                    className="resize-none"
+                    rows={3}
+                />
             </div>
 
             <Button className="w-full h-12 text-lg" disabled={!date?.from || !date?.to || !!dateError}>

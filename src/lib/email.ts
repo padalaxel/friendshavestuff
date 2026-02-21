@@ -16,7 +16,7 @@ function getAppUrl() {
     return 'http://localhost:3000';
 }
 
-export async function sendRequestNotification(toEmail: string, itemName: string, requesterName: string, itemId: string, replyToEmail?: string, startDate?: string, endDate?: string) {
+export async function sendRequestNotification(toEmail: string, itemName: string, requesterName: string, itemId: string, replyToEmail?: string, startDate?: string, endDate?: string, message?: string) {
     const resend = getResendClient();
     const apiKey = process.env.RESEND_API_KEY;
     const appUrl = getAppUrl();
@@ -53,6 +53,13 @@ export async function sendRequestNotification(toEmail: string, itemName: string,
                     <h2>New Borrow Request</h2>
                     ${requestMessage}
                     
+                    ${message ? `
+                        <div style="background-color: #f3f4f6; padding: 15px; border-left: 4px solid #2563eb; margin: 20px 0;">
+                            <strong>Message from ${requesterName}:</strong><br/>
+                            ${message}
+                        </div>
+                    ` : ''}
+
                     <p>Replying to this message will e-mail <strong>${requesterName}</strong> directly. To approve or deny the request, click the button below.</p>
 
                     <div style="margin: 24px 0;">
